@@ -1659,7 +1659,7 @@ v1.1（以 GBD 2023 替代 IHME 已退役的 GBD 2021）随注册存档。<br>
 
 <h3>作者</h3>
 <p>Peiliang Lei（通讯作者）、Wenrong Dong、Jingyi Tan、Xiaoying Yang<br>
-Department of Otolaryngology, Third Hospital of Shijiazhuang, Hebei, China.</p>
+Department of Otolaryngology, The Third Hospital of Shijiazhuang, Shijiazhuang, Hebei 050011, China.</p>
 
 <h3>数据来源</h3>
 <ul>
@@ -1715,8 +1715,8 @@ the frozen result files; it is not updated as new data appear.</p>
 <h3>Authors</h3>
 <p>Peiliang Lei (corresponding author), Wenrong Dong, Jingyi Tan,
 Xiaoying Yang<br>
-Department of Otolaryngology, Third Hospital of Shijiazhuang, Hebei,
-China.</p>
+Department of Otolaryngology, The Third Hospital of Shijiazhuang,
+Shijiazhuang, Hebei 050011, China.</p>
 
 <h3>Data sources</h3>
 <ul>
@@ -1926,6 +1926,16 @@ def build():
               ("Fully matched", "Largely not supported", "Half matched")))
     check("about page carries both DOIs",
           OSF_DOI in pages["about.html"] and ZENODO_DOI in pages["about.html"])
+    check("about pages pin exact master affiliation string",
+          "Department of Otolaryngology, The Third Hospital of "
+          "Shijiazhuang, Shijiazhuang, Hebei 050011, China"
+          in " ".join(pages["about.html"].split())
+          and "Department of Otolaryngology, The Third Hospital of "
+          "Shijiazhuang, Shijiazhuang, Hebei 050011, China"
+          in " ".join(pages_zh["about.html"].split()))
+    check("old short affiliation absent from all pages",
+          all("Third Hospital of Shijiazhuang, Hebei" not in h
+              for h in list(pages.values()) + list(pages_zh.values())))
     for a in AREAS:
         html = pages[f"areas/{a}.html"]
         check(f"breadcrumb on {a}",
@@ -1965,7 +1975,8 @@ def build():
     check("zh about authors and affiliation in English",
           all(n in pages_zh["about.html"] for n in
               ("Peiliang Lei", "Wenrong Dong", "Jingyi Tan", "Xiaoying Yang",
-               "Department of Otolaryngology, Third Hospital of Shijiazhuang")))
+               "Department of Otolaryngology, The Third Hospital of "
+               "Shijiazhuang, Shijiazhuang, Hebei 050011, China")))
     check("zh pages contain no 质心 (term is 双重心)",
           all("质心" not in h for h in pages_zh.values()))
     check("zh pages contain no 石家庄 (affiliation in English)",
