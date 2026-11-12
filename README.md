@@ -23,7 +23,10 @@ first-author shares, and a rule-based decoupling typology.
 
 - `/` — the static website (pure HTML/CSS with build-time inline SVG charts;
   no JavaScript framework, no tracking). `index.html`, `areas.html`,
-  `areas/*.html` (14 area pages), `methods.html`, `downloads.html`.
+  `areas/*.html` (14 area pages), `findings.html`, `geography.html`,
+  `typology.html`, `methods.html`, `downloads.html`, `about.html`.
+- `/zh/` — the full Chinese mirror of every page above (English is the
+  default at the root URLs; each page carries a 中文 / EN toggle).
 - `/downloads/` — the frozen result tables (CSV) behind every number on the
   site, plus `frozen_tables.zip`.
 - `/code/scripts/` — production pipeline (publication census, GBD mapping,

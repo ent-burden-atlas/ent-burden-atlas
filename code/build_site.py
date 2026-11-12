@@ -3,9 +3,9 @@
 
 Reads ONLY the frozen result files of the ENT attention-burden census
 (~/workspace/ent-attention-burden/data_l1|l2|l3|l4), asserts the headline
-numbers frozen in the project record, and emits a pure-static English
-website (HTML + one CSS file + build-time inline SVG charts) into
-site_build/site/.
+numbers frozen in the project record, and emits a pure-static bilingual
+website (English at the root URLs, a full Chinese mirror under zh/;
+HTML + one CSS file + build-time inline SVG charts) into site_build/site/.
 
 No number is typed into the pages by hand: every value comes from the
 frozen CSVs, and the build fails if any headline assertion fails.
@@ -81,6 +81,66 @@ CRS_CAVEAT = ("Terminology caveat: under a pre-frozen backup query built only "
               "(+251.0% instead of −26.6%). The apparent decline is read as "
               "terminology migration, not as a change in research volume, and "
               "is not carried as a headline conclusion.")
+
+# ------------------------------------------------------------- Chinese mirror
+# Terminology is taken verbatim from the project's Chinese documents (signed
+# work report v1 2026-11-08; L4 typology rule table 2026-11-12; terminology
+# freeze and sensitivity verdict 2026-11-12; manuscript drafting brief):
+# 关注/负担比 (ABR), 双质心距离, 脱钩分型, 解决稀释型 / 技术点燃型 / 负担同行型 /
+# 恒定型 / 未归型, 份额上升型 / 份额稳定型 / 份额下降型, 负担层 / 关注层,
+# 幽灵记录, 弦平均, 几何中位数, 算术平均中心.
+NAMES_ZH = {
+    "otitis_media": "中耳炎",
+    "hearing_loss": "听力损失",
+    "larynx_cancer": "喉癌",
+    "oral_cancer": "唇与口腔癌",
+    "nasopharynx_cancer": "鼻咽癌",
+    "other_pharynx_cancer": "其他咽癌",
+    "thyroid_cancer": "甲状腺癌",
+    "crs_polyps": "慢性鼻窦炎/鼻息肉（CRS）",
+    "allergic_rhinitis": "过敏性鼻炎",
+    "osa": "阻塞性睡眠呼吸暂停",
+    "tinnitus": "耳鸣",
+    "vertigo": "眩晕",
+    "cholesteatoma": "胆脂瘤",
+    "cochlear_implant": "人工耳蜗",
+}
+GBD_CAUSE_ZH = {
+    "otitis_media": "中耳炎（GBD cause 329）",
+    "hearing_loss": "年龄相关和其他听力损失（GBD cause 674）",
+    "larynx_cancer": "喉癌（GBD cause 423）",
+    "oral_cancer": "唇与口腔癌（GBD cause 444）",
+    "nasopharynx_cancer": "鼻咽癌（GBD cause 447）",
+    "other_pharynx_cancer": "其他咽癌（GBD cause 450）",
+    "thyroid_cancer": "甲状腺癌（GBD cause 480）",
+}
+TYPE_LABEL_ZH = {
+    "resolution_dilution": "解决稀释型",
+    "technology_ignited": "技术点燃型",
+    "burden_tracking": "负担同行型",
+    "constant": "恒定型",
+    "unclassified": "未归型",
+    "share_falling": "份额下降型",
+    "share_rising": "份额上升型",
+    "share_stable": "份额稳定型",
+}
+DIR_ZH = {"down": "降", "stable": "稳", "up": "升"}
+CRS_CAVEAT_ZH = ("术语注记：若改用一条在计数前已冻结、仅由现代共识后术语构建的备用检索式，"
+                 "CRS 的份额变化将翻转（+251.0%，而非 −26.6%）。这一表面下降应按术语迁移解读，"
+                 "而非研究量的变化，且不作为头条结论。")
+NAV = [("index.html", "Home", "首页"), ("areas.html", "Areas", "病区"),
+       ("findings.html", "Findings", "头条结论"),
+       ("geography.html", "Geography", "地理"),
+       ("typology.html", "Typology", "分型"),
+       ("methods.html", "Methods", "方法"),
+       ("downloads.html", "Downloads", "下载"),
+       ("about.html", "About", "关于")]
+BRAND = {"en": "ENT Burden Atlas", "zh": "耳鼻喉错配图谱站"}
+SUBTITLE = {
+    "en": "Research attention vs disease burden in otolaryngology, "
+          "1995–2024 — a preregistered dynamic census",
+    "zh": "耳鼻喉研究关注度与疾病负担，1995–2024——一项预注册的动态普查",
+}
 
 
 def read_csv(rel):
@@ -275,7 +335,7 @@ check("absolute DALY annualised change max +101.3%", close(max(daly_chg), 101.3,
 
 # ---------------------------------------------------------------- SVG charts
 def spark(values, w=300, h=92, color="#1d4ed8", zero=False, vfmt="{:.1f}",
-          labels=True):
+          labels=True, lang="en"):
     """Small inline-SVG line chart over the six periods."""
     vals = [float(v) for v in values]
     lo, hi = min(vals), max(vals)
@@ -291,8 +351,9 @@ def spark(values, w=300, h=92, color="#1d4ed8", zero=False, vfmt="{:.1f}",
     def Y(v):
         return y1 - (y1 - y0) * (v - lo) / (hi - lo)
 
+    aria = "trajectory chart" if lang == "en" else "轨迹图"
     parts = [f'<svg viewBox="0 0 {w} {h}" class="spark" role="img" '
-             f'aria-label="trajectory chart">']
+             f'aria-label="{aria}">']
     if zero and lo < 0 < hi:
         parts.append(f'<line x1="{x0}" y1="{Y(0):.1f}" x2="{x1}" y2="{Y(0):.1f}" '
                      'stroke="#b91c1c" stroke-width="0.8" stroke-dasharray="4 3"/>')
@@ -315,7 +376,7 @@ def spark(values, w=300, h=92, color="#1d4ed8", zero=False, vfmt="{:.1f}",
     return "".join(parts)
 
 
-def mini(values, w=120, h=30, color="#1d4ed8"):
+def mini(values, w=120, h=30, color="#1d4ed8", lang="en"):
     vals = [float(v) for v in values]
     lo, hi = min(vals), max(vals)
     pad = (hi - lo) * 0.15 or 1.0
@@ -328,13 +389,14 @@ def mini(values, w=120, h=30, color="#1d4ed8"):
         return (h - 4) - (h - 8) * (v - lo) / (hi - lo)
 
     pts = " ".join(f"{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(vals))
+    aria = "share trajectory sparkline" if lang == "en" else "份额轨迹小图"
     return (f'<svg viewBox="0 0 {w} {h}" class="mini" role="img" '
-            f'aria-label="share trajectory sparkline"><polyline points="{pts}" '
+            f'aria-label="{aria}"><polyline points="{pts}" '
             f'fill="none" stroke="{color}" stroke-width="1.6"/></svg>')
 
 
 # ---------------------------------------------------------------- page frame
-CSS = """*{box-sizing:border-box}body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#1f2937;line-height:1.55;background:#fff}
+CSS = """*{box-sizing:border-box}body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif;color:#1f2937;line-height:1.55;background:#fff}
 header.site{background:#0f2a52;color:#fff;padding:14px 18px}header.site .wrap{max-width:1060px;margin:0 auto}
 header.site h1{font-size:20px;margin:0 0 2px}header.site p{margin:0;font-size:13px;color:#c7d5ea}
 nav.main{background:#16407c}nav.main .wrap{max-width:1060px;margin:0 auto;display:flex;flex-wrap:wrap;gap:2px}
@@ -370,33 +432,53 @@ tr.mute td{color:#6b7280;background:#f3f4f6}
 """
 
 
-def page(title, body, depth=0):
+def page(title, body, depth=0, lang="en", rel="index.html"):
     pre = "../" * depth
+    # The Chinese mirror lives under zh/ with the same internal structure, so
+    # in-tree relative links are identical; only the stylesheet (served from
+    # the site root) and the language toggle need cross-tree paths.
+    asset_pre = "../" * (depth + 1) if lang == "zh" else pre
+    if lang == "zh":
+        toggle = "../" * (depth + 1) + rel
+        toggle_label = "EN"
+        nav = "".join(f'<a href="{pre}{t}">{z}</a>' for t, _e, z in NAV)
+        footer = f"""本站规范网址：<a href="{CANONICAL}/">{CANONICAL}</a> ·
+冻结数据与代码存档：<a href="{ZENODO_URL}">Zenodo，DOI {ZENODO_DOI}</a> ·
+预注册：<a href="{OSF_URL}">OSF，DOI {OSF_DOI}</a><br>
+本站为静态网站，由冻结结果文件生成。它只度量研究配置的构成关系，
+不对任何疾病研究的临床价值作判断。"""
+        html_lang = "zh-CN"
+    else:
+        toggle = pre + "zh/" + rel
+        toggle_label = "中文"
+        nav = "".join(f'<a href="{pre}{t}">{e}</a>' for t, e, _z in NAV)
+        footer = f"""Canonical site: <a href="{CANONICAL}/">{CANONICAL}</a> ·
+Frozen data &amp; code archive: <a href="{ZENODO_URL}">Zenodo, DOI {ZENODO_DOI}</a> ·
+Preregistration: <a href="{OSF_URL}">OSF, DOI {OSF_DOI}</a><br>
+This is a static site generated from frozen result files. It measures the configuration of research
+allocation only; it makes no judgement about the clinical value of research on any disease."""
+        html_lang = "en"
     return f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="{html_lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{escape(title)} · ENT Burden Atlas</title>
-<link rel="stylesheet" href="{pre}assets/style.css?v={ASSET_V}">
+<title>{escape(title)} · {BRAND[lang]}</title>
+<link rel="stylesheet" href="{asset_pre}assets/style.css?v={ASSET_V}">
 </head>
 <body>
 <header class="site"><div class="wrap">
-<h1>ENT Burden Atlas</h1>
-<p>Research attention vs disease burden in otolaryngology, 1995–2024 — a preregistered dynamic census</p>
+<h1>{BRAND[lang]}</h1>
+<p>{SUBTITLE[lang]}</p>
 </div></header>
 <nav class="main"><div class="wrap">
-<a href="{pre}index.html">Home</a><a href="{pre}areas.html">Areas</a><a href="{pre}findings.html">Findings</a><a href="{pre}geography.html">Geography</a><a href="{pre}typology.html">Typology</a><a href="{pre}methods.html">Methods</a><a href="{pre}downloads.html">Downloads</a><a href="{pre}about.html">About</a>
+{nav}<a href="{toggle}">{toggle_label}</a>
 </div></nav>
 <main>
 {body}
 </main>
 <footer class="site"><div class="wrap">
-Canonical site: <a href="{CANONICAL}/">{CANONICAL}</a> ·
-Frozen data &amp; code archive: <a href="{ZENODO_URL}">Zenodo, DOI {ZENODO_DOI}</a> ·
-Preregistration: <a href="{OSF_URL}">OSF, DOI {OSF_DOI}</a><br>
-This is a static site generated from frozen result files. It measures the configuration of research
-allocation only; it makes no judgement about the clinical value of research on any disease.
+{footer}
 </div></footer>
 </body>
 </html>
@@ -412,7 +494,10 @@ def signed_pct(x):
 
 
 # ---------------------------------------------------------------- home page
-def area_cards():
+def area_cards(lang="en"):
+    zh = lang == "zh"
+    names = NAMES_ZH if zh else NAMES
+    labels = TYPE_LABEL_ZH if zh else TYPE_LABEL
     cards = []
     for a in AREAS:
         tier_burden = a in BURDEN
@@ -421,24 +506,87 @@ def area_cards():
         mark = " *" if a == "crs_polyps" else ""
         if tier_burden:
             abr_last = float(abr[(a, "2020-2024")]["abr"])
-            hl = (f"ABR {abr_last:.2f} in 2020–24 · Pool share "
+            hl = (f"ABR {abr_last:.2f}（2020–24）· 池内份额 "
+                  f"{s_first} → {s_last}" if zh else
+                  f"ABR {abr_last:.2f} in 2020–24 · Pool share "
                   f"{s_first} → {s_last}")
-            tier = "Burden tier"
+            tier = "负担层" if zh else "Burden tier"
         else:
-            hl = (f"Pool share {s_first} → {s_last} · "
-                  f"{TYPE_LABEL[typology[a]['type_main']]}")
-            tier = "Attention tier"
+            hl = (f"池内份额 {s_first} → {s_last} · "
+                  f"{labels[typology[a]['type_main']]}" if zh else
+                  f"Pool share {s_first} → {s_last} · "
+                  f"{labels[typology[a]['type_main']]}")
+            tier = "关注层" if zh else "Attention tier"
         cards.append(
             f'<div class="acard"><div class="nm">'
-            f'<a href="areas/{a}.html">{escape(NAMES[a])}{mark}</a></div>'
+            f'<a href="areas/{a}.html">{escape(names[a])}{mark}</a></div>'
             f'<div class="hl">{hl}</div>'
             f'<div class="tier"><span class="tag">{tier}</span></div></div>')
     return "\n".join(cards)
 
 
-def home():
+def home(lang="en"):
     hl_daly = 100 * float(hl_l["burden_share_pool"])
     hl_pub = 100 * float(hl_l["pub_share_burden_pool"])
+    if lang == "zh":
+        body = f"""
+<h2>本站简介</h2>
+<p>耳鼻喉错配图谱站呈现一项预注册普查的结果：过去 30 年，耳鼻喉科（耳、鼻、喉医学）的
+研究关注度与疾病负担的对齐情况。发文量取自 Europe PMC，覆盖 14 个病区
+（1995–2024；可取回记录 {fnum(tot_records)} 条）；其中 7 个病区有匹配的全球疾病负担
+（GBD）2023 病因，其产出与 DALY 负担（1995–2023）对置。四层测量在同一尺度上报告：
+发文份额动态、关注/负担比（ABR）、负担质心与研究质心之间的双质心距离，以及规则化
+脱钩分型。本设计在记录级数据拉取之前已经注册
+（<a href="{OSF_URL}">OSF 注册，DOI {OSF_DOI}</a>）。</p>
+
+<div class="cards">
+<div class="card"><div class="big">{fnum(pool['1995-1999'])} → {fnum(pool['2020-2024'])}</div>
+<div class="lab">14 区池每五年的发文量，1995–99 → 2020–24</div></div>
+<div class="card"><div class="big">{pct(fc_first)} → {pct(fc_last)}</div>
+<div class="lab">五种头颈部癌症的合计池内份额</div></div>
+<div class="card"><div class="big">log2 ABR −1.05 → −1.47</div>
+<div class="lab">听力损失：占池内 DALY 的 {pct(hl_daly)} vs 占池内发文的 {pct(hl_pub)}
+（2020–24 年 ABR 0.36）——最深且仍在扩大的缺口</div></div>
+<div class="card"><div class="big">{pct(float(lmic['1995-1999']['lmic_share_all']))} → {pct(float(lmic['2020-2024']['lmic_share_all']))}</div>
+<div class="lab">第一作者中的低收入和中等收入国家份额（全部病区合并）；
+剔除中国后为 {pct(float(lmic['1995-1999']['lmic_share_excl_china']))} → {pct(float(lmic['2020-2024']['lmic_share_excl_china']))}</div></div>
+</div>
+
+<h3>浏览 14 个病区</h3>
+<div class="acards">
+{area_cards("zh")}
+</div>
+<p class="small">* 慢性鼻窦炎/鼻息肉：在仅由现代共识后术语构建的备用检索式下，份额下降
+发生翻转（+251.0%），应按术语迁移解读，而非研究量的下降（见
+<a href="areas/crs_polyps.html">CRS 病区页</a>与<a href="methods.html">方法页</a>）。</p>
+
+<h3>头条发现</h3>
+<ul>
+<li><b>份额向肿瘤方向轮转。</b>五种头颈部癌症合计占池份额由 {pct(fc_first)} 升至
+{pct(fc_last)}；喉癌逆其组而行（3.2% → 1.4%）。</li>
+<li><b>中耳炎份额缩小，产出未减。</b>其份额由 8.4% 降至 2.9%，而其五年产出由 2,229 篇
+增至 3,706 篇——分母效应。</li>
+<li><b>听力损失是核心的水平发现。</b>它占七病因 DALY 池的 {pct(hl_daly)}，而只占同一池
+发文的 {pct(hl_pub)}，且缺口在 30 年间扩大（log2 ABR −1.05 → −1.47）。</li>
+<li><b>地理上方向趋同，水平未趋同。</b>负担—研究双质心距离在全部 7 个负担层病因上
+下降（−39% 至 −80%），但末期距离仍为 1,102–5,242 km。</li>
+<li><b>分型：</b>中耳炎为解决稀释型（相对份额稀释——七个病因的绝对 DALY 均上升）；
+鼻咽癌与口腔癌在三套阈值下均为技术点燃型；听力损失在动态上为恒定型，但处于深度负水平
+（ABR 0.36）；喉癌、其他咽癌与甲状腺癌如实报为<i>未归型</i>，不硬塞入任何类型。</li>
+</ul>
+<div class="caveat"><b>慢性鼻窦炎/鼻息肉。</b>{CRS_CAVEAT_ZH}</div>
+
+<h3>引用与再利用</h3>
+<p class="kv">预注册：<a href="{OSF_URL}">doi.org/{OSF_DOI}</a> ·
+冻结数据与代码：<a href="{ZENODO_URL}">Zenodo，DOI {ZENODO_DOI}</a> ·
+本站规范网址：<a href="{CANONICAL}/">burden.erbihou.org</a></p>
+<p>报告本普查的稿件正在为 <i>Scientometrics</i> 准备中（尚未发表）。
+<a href="downloads.html">下载页</a>的冻结表格可按存档许可再利用；本管线在结构上与专科
+无关，可换一个专科的疾病池重跑。</p>
+<p class="small">范围边界：本站每一数量描述的都是已发表研究相对于模型化负担估计的
+配置关系。本站不对疾病按临床重要性排序，也不陈述任何疾病应获得多少研究。</p>
+"""
+        return page("首页", body, lang="zh", rel="index.html")
     body = f"""
 <h2>What this is</h2>
 <p>The ENT Burden Atlas presents a preregistered census of how research attention in
@@ -509,32 +657,58 @@ published research relative to modelled burden estimates. Nothing on this site
 ranks diseases by clinical importance or states how much research any disease
 should receive.</p>
 """
-    return page("Home", body)
+    return page("Home", body, lang="en", rel="index.html")
 
 
 # ---------------------------------------------------------------- areas page
-def areas_page():
+def areas_page(lang="en"):
+    zh = lang == "zh"
+    names = NAMES_ZH if zh else NAMES
+    labels = TYPE_LABEL_ZH if zh else TYPE_LABEL
+    tiers = (("负担层", BURDEN, "有 GBD 匹配负担") if zh else
+             ("Burden tier", BURDEN, "with GBD-matched burden"),
+             ("关注层", ATTENTION, "无 GBD 匹配负担；仅份额动态") if zh else
+             ("Attention tier", ATTENTION,
+              "no GBD-matched burden; share dynamics only"))
     rows = []
-    for tier, group in (("Burden tier", BURDEN), ("Attention tier", ATTENTION)):
+    for tier, group, tier_note in tiers:
         rows.append(f'<tr><th class="l" colspan="7">{tier} '
-                    f'({"with GBD-matched burden" if tier == "Burden tier" else "no GBD-matched burden; share dynamics only"})</th></tr>')
+                    f'({tier_note})</th></tr>')
         for a in group:
             s = signals[a]
             t = typology[a]
             tagcls = ""
-            label = TYPE_LABEL[t["type_main"]]
+            label = labels[t["type_main"]]
             if t["type_main"] == "unclassified":
                 tagcls = " warn"
             if a == "crs_polyps":
                 label += " *"
             rows.append(
-                f'<tr><td class="l"><a href="areas/{a}.html">{escape(NAMES[a])}</a></td>'
-                f'<td>{mini([share[(a, p)] for p in PERIODS])}</td>'
+                f'<tr><td class="l"><a href="areas/{a}.html">{escape(names[a])}</a></td>'
+                f'<td>{mini([share[(a, p)] for p in PERIODS], lang=lang)}</td>'
                 f'<td>{fnum(pcount[(a, "1995-1999")])}</td>'
                 f'<td>{fnum(pcount[(a, "2020-2024")])}</td>'
                 f'<td>{pct(share[(a, "1995-1999")])}</td>'
                 f'<td>{pct(share[(a, "2020-2024")])}</td>'
                 f'<td class="l"><span class="tag{tagcls}">{escape(label)}</span></td></tr>')
+    if zh:
+        body = f"""
+<h2>14 个病区</h2>
+<p>份额是 14 区发文池内的构成
+（1995–99 年 {fnum(pool['1995-1999'])} 条记录；2020–24 年 {fnum(pool['2020-2024'])} 条）。
+负担层病区的各自页面还载有 ABR、双质心距离与分型结果。关注层病区没有 GBD 匹配的
+负担病因，因此不为其计算或暗示任何负担量。</p>
+<table>
+<tr><th class="l">病区</th><th>份额轨迹</th><th>1995–99 发文</th>
+<th>2020–24 发文</th><th>1995–99 份额</th><th>2020–24 份额</th><th class="l">类型 / 动态</th></tr>
+{''.join(rows)}
+</table>
+<div class="caveat">* 慢性鼻窦炎/鼻息肉：{CRS_CAVEAT_ZH}</div>
+<p class="small">听力损失的「恒定型」仅就动态而言；须与其水平一并读——2020–24 年
+ABR 0.36（log2 ABR −1.47）：稳定的错配，而非没有错配。本站任何地方的「解决」均指
+池内相对份额稀释；七个负担层病因的年化绝对 DALY 均上升（+3.9% 至 +101.3%）。</p>
+"""
+        return page("病区", body, lang="zh", rel="areas.html")
     body = f"""
 <h2>The 14 disease areas</h2>
 <p>Shares are compositions within the 14-area publication pool
@@ -554,7 +728,7 @@ absence of one. "Resolution" anywhere on this site means relative share dilution
 inside the pool; annualised absolute DALYs rose for all seven burden-tier causes
 (+3.9% to +101.3%).</p>
 """
-    return page("Areas", body)
+    return page("Areas", body, lang="en", rel="areas.html")
 
 
 # ---------------------------------------------------------------- area pages
@@ -697,11 +871,238 @@ def area_page(a):
     parts.append(f'<div class="prevnext">{prev_link}{next_link}</div>')
     parts.append('<p class="small"><a href="../areas.html">← All areas</a> · '
                  'Full frozen tables: <a href="../downloads.html">Downloads</a></p>')
-    return page(NAMES[a], "\n".join(parts), depth=1)
+    return page(NAMES[a], "\n".join(parts), depth=1, lang="en",
+                rel=f"areas/{a}.html")
+
+
+def area_page_zh(a):
+    tier_burden = a in BURDEN
+    s = signals[a]
+    t = typology[a]
+    share_vals = [share[(a, p)] for p in PERIODS]
+    parts = [f'<p class="crumbs"><a href="../index.html">首页</a> › '
+             f'<a href="../areas.html">病区</a> › {escape(NAMES_ZH[a])}</p>',
+             f"<h2>{escape(NAMES_ZH[a])}</h2>"]
+    if tier_burden:
+        parts.append(f'<p class="kv">层级：<b>负担层</b> · 匹配负担病因：'
+                     f'<b>{escape(GBD_CAUSE_ZH[a])}</b>，GBD 2023（DALY 为主口径）。</p>')
+    else:
+        parts.append('<p class="kv">层级：<b>关注层</b> · 本病区没有 GBD 匹配的'
+                     '负担病因；<b>不计算、也不暗示任何负担量</b>。仅报告发文份额动态。</p>')
+    parts.append("<h3>占 14 区池的发文份额</h3>")
+    parts.append(spark(share_vals, vfmt="{:.1f}", lang="zh"))
+    parts.append('<p class="figcap">按五年期的池内份额（%）。'
+                 '池总量：' + "，".join(
+                     f"{PLAB[p]} {fnum(pool[p])}" for p in PERIODS) + "。</p>")
+    tr = "".join(f"<td>{pct(share[(a, p)], 2)}</td>" for p in PERIODS)
+    tc = "".join(f"<td>{fnum(pcount[(a, p)])}</td>" for p in PERIODS)
+    parts.append(f"""<table>
+<tr><th class="l">时期</th>{''.join(f'<th>{PLAB[p]}</th>' for p in PERIODS)}</tr>
+<tr><td class="l">发文量</td>{tc}</tr>
+<tr><td class="l">池内份额（%）</td>{tr}</tr>
+</table>""")
+    parts.append(f'<p>首末期份额变化：<b>{signed_pct(float(s["S_rel_pct"]))}</b>'
+                 f'（相对）。动态标签：<b>{escape(TYPE_LABEL_ZH[t["type_main"]])}</b>。</p>')
+    if a == "crs_polyps":
+        parts.append(f'<div class="caveat">{CRS_CAVEAT_ZH}主检索式下份额由 '
+                     f'{pct(share[(a, "1995-1999")])} 降至 '
+                     f'{pct(share[(a, "2020-2024")])}；备用检索式下则由 '
+                     f'1.51% 升至 5.31%。</div>')
+    if tier_burden:
+        abr_vals = [float(abr[(a, p)]["log2_abr"]) for p in PERIODS]
+        parts.append("<h3>关注/负担比（ABR）</h3>")
+        parts.append(spark(abr_vals, color="#b45309", zero=True,
+                           vfmt="{:+.2f}", lang="zh"))
+        parts.append('<p class="figcap">按时期的 log2 ABR（虚线＝齐平，ABR 1）。'
+                     '末期以 2020–24 年发文对 2020–23 年负担（见方法页）。</p>')
+        tr2 = "".join(f"<td>{float(abr[(a, p)]['log2_abr']):+.2f}</td>" for p in PERIODS)
+        tr3 = "".join(f"<td>{float(abr[(a, p)]['abr']):.2f}</td>" for p in PERIODS)
+        tr4 = "".join(f"<td>{100 * float(abr[(a, p)]['pub_share_burden_pool']):.1f}%</td>"
+                      for p in PERIODS)
+        tr5 = "".join(f"<td>{100 * float(abr[(a, p)]['burden_share_pool']):.1f}%</td>"
+                      for p in PERIODS)
+        parts.append(f"""<table>
+<tr><th class="l">时期</th>{''.join(f'<th>{PLAB[p]}</th>' for p in PERIODS)}</tr>
+<tr><td class="l">log2 ABR</td>{tr2}</tr>
+<tr><td class="l">ABR</td>{tr3}</tr>
+<tr><td class="l">占 7 病因池的发文份额（%）</td>{tr4}</tr>
+<tr><td class="l">占 7 病因池的 DALY 份额（%）</td>{tr5}</tr>
+</table>""")
+        if a == "hearing_loss":
+            parts.append('<div class="note">听力损失仅按动态归为<b>恒定型</b>。'
+                         '其水平才是本普查的核心水平发现：2020–24 年 ABR 0.36'
+                         '（log2 ABR −1.47），即占池内 DALY 的 72.7% 对占池内发文的 '
+                         '26.3%，且缺口在 30 年间扩大。</div>')
+        dvals = [float(dist[(a, p)]["distance_km"]) for p in PERIODS]
+        parts.append("<h3>负担—研究双质心距离</h3>")
+        parts.append(spark(dvals, color="#0e7490", vfmt="{:,.0f}", lang="zh"))
+        parts.append('<p class="figcap">DALY 加权负担质心与第一作者研究质心之间的'
+                     '大圆距离（km）（算术平均中心；见方法页）。</p>')
+        trd = "".join(f"<td>{km(float(dist[(a, p)]['distance_km']))}</td>" for p in PERIODS)
+        parts.append(f"""<table>
+<tr><th class="l">时期</th>{''.join(f'<th>{PLAB[p]}</th>' for p in PERIODS)}</tr>
+<tr><td class="l">距离（km）</td>{trd}</tr>
+</table>""")
+        chg = 100 * (dvals[-1] - dvals[0]) / dvals[0]
+        parts.append(f'<p>首末期变化：<b>{signed_pct(chg)}</b>'
+                     f'（{km(dvals[0])} → {km(dvals[-1])} km）。每个病因的末期距离'
+                     '在绝对值上仍大。</p>')
+        if a == "nasopharynx_cancer":
+            parts.append('<p>路径并非单调：距离在 2015–19 年降至 978 km，'
+                         '2020–24 年回升至 2,467 km，是本层最大的单步反转。</p>')
+        if a == "thyroid_cancer":
+            parts.append('<p>最后一步在陡降之后小幅上升（1,674 → 1,756 km，'
+                         '+82 km）。</p>')
+        lm = [100 * float(ashare[(a, p)]["lmic_share"]) for p in PERIODS]
+        parts.append("<h3>第一作者地域</h3>")
+        parts.append(f'<p>解析所得第一作者记录中 LMIC 所占份额：'
+                     f'<b>{pct(lm[0])} → {pct(lm[-1])}</b>（本病区；14 区合并：'
+                     f'7.9% → 39.8%）。位于本病因 DALY 前十国家的第一作者份额：'
+                     f'<b>{pct(100 * float(ashare[(a, "1995-1999")]["top10_burden_share"]))} → '
+                     f'{pct(100 * float(ashare[(a, "2020-2024")]["top10_burden_share"]))}</b>。</p>')
+        parts.append("<h3>脱钩分型</h3>")
+        parts.append(f"""<table>
+<tr><th class="l">信号</th><th>值</th><th class="l">方向（主阈值）</th></tr>
+<tr><td class="l">S——池内发文份额的相对变化</td><td>{signed_pct(float(s['S_rel_pct']))}</td><td class="l">{escape(DIR_ZH[s['S_dir_main']])}</td></tr>
+<tr><td class="l">B——7 病因池 DALY 份额的相对变化</td><td>{signed_pct(float(s['B_rel_pct']))}</td><td class="l">{escape(DIR_ZH[s['B_dir_main']])}</td></tr>
+<tr><td class="l">A——log2 ABR 的变化</td><td>{float(s['A_delta']):+.2f}</td><td class="l">{escape(DIR_ZH[s['A_dir_main']])}</td></tr>
+</table>""")
+        parts.append(f"""<table>
+<tr><th class="l">阈值组</th><th class="l">归型</th></tr>
+<tr><td class="l">低组（±15% / ±0.3）</td><td class="l">{escape(TYPE_LABEL_ZH[t['type_low']])}</td></tr>
+<tr><td class="l">主组（±25% / ±0.5）</td><td class="l"><b>{escape(TYPE_LABEL_ZH[t['type_main']])}</b></td></tr>
+<tr><td class="l">高组（±35% / ±0.7）</td><td class="l">{escape(TYPE_LABEL_ZH[t['type_high']])}</td></tr>
+</table>""")
+        if t["type_main"] == "unclassified":
+            parts.append('<p>该病因在主阈值下不合任何规则，如实报为<b>未归型</b>；'
+                         '不硬塞入任何类型。其在其他阈值组下的表现见上表。</p>')
+        parts.append(f'<p class="small">本病因的年化绝对 DALY 在首末期之间变化 '
+                     f'{signed_pct(float(s["daly_annual_pct_change"]))}。B 是份额：'
+                     'B 下降意味着池内相对稀释，绝非绝对下降。</p>')
+    else:
+        lm = [100 * float(ashare[(a, p)]["lmic_share"]) for p in PERIODS]
+        parts.append("<h3>第一作者地域</h3>")
+        parts.append(f'<p>解析所得第一作者记录中 LMIC 所占份额：'
+                     f'<b>{pct(lm[0])} → {pct(lm[-1])}</b>（本病区；14 区合并：'
+                     f'7.9% → 39.8%）。</p>')
+        tt = term[a]
+        parts.append("<h3>术语敏感性</h3>")
+        parts.append(f'<p>在一条预先冻结的备用检索式下，本病区的份额变化为 '
+                     f'{signed_pct(float(tt["backup_rel_change_pct"]))}（主检索式：'
+                     f'{signed_pct(float(tt["primary_rel_change_pct"]))}）。两个检索式'
+                     f'在 ±5% 带内方向{"一致" if tt["directions_agree"] == "yes" else "不一致"}。</p>')
+    idx = AREAS.index(a)
+    prev_link = (f'<a href="{AREAS[idx - 1]}.html">← 上一区：'
+                 f'{escape(NAMES_ZH[AREAS[idx - 1]])}</a>' if idx > 0 else "<span></span>")
+    next_link = (f'<a href="{AREAS[idx + 1]}.html">下一区：'
+                 f'{escape(NAMES_ZH[AREAS[idx + 1]])} →</a>'
+                 if idx < len(AREAS) - 1 else "<span></span>")
+    parts.append(f'<div class="prevnext">{prev_link}{next_link}</div>')
+    parts.append('<p class="small"><a href="../areas.html">← 全部病区</a> · '
+                 '完整冻结表格：<a href="../downloads.html">下载</a></p>')
+    return page(NAMES_ZH[a], "\n".join(parts), depth=1, lang="zh",
+                rel=f"areas/{a}.html")
 
 
 # ---------------------------------------------------------------- methods page
-def methods_page():
+def methods_page(lang="en"):
+    if lang == "zh":
+        body = f"""
+<h2>方法</h2>
+
+<h3>设计与预注册</h3>
+<p>本研究是一项描述性、分母型普查。先固定两个分母——14 区发文池，及其内的七病因
+负担池——一切数量均为池内构成。本方案、疾病池与分析层在记录级生产开始之前，已由
+签批的工作报告固定并在开放科学框架（OSF）上预注册
+（<a href="{OSF_URL}">注册 DOI {OSF_DOI}</a>）。一项修订有档可查：IHME 已退役
+GBD 2021，故修订书 v1.1 以 <b>GBD 2023</b> 替代（负担年份 1995–2023）。本研究只度量
+研究配置的构成关系；不作临床价值判断，也不主张任何疾病应获得多少研究。</p>
+
+<h3>发文普查（L1）</h3>
+<p>发文量在 Europe PMC 中按每区一条冻结的题名/摘要检索式、逐年计数，覆盖
+1995–2024 年（420 个区—年单元），并汇总为六个五年期。L1 计数采用 Europe PMC 的
+hitCount 口径（392,458 条记录）。为地理层所做的记录级拉取共得 {fnum(tot_records)}
+条记录；其中两个分片各含一条「幽灵记录」——计入 hitCount 却从未被接口交付
+（D-1：口腔癌 2010–2014，4,806 vs 可取回 4,805；D-2：阻塞性睡眠呼吸暂停
+2015–2019，11,604 vs 11,603）。每条幽灵记录均在三项脚本核验通过后才被接受
+（标识符全唯一；复查时 hitCount 稳定；独立第二取回通道所得标识符集合相同），
+两条均逐项记入随存档发布的冻结差异记录。</p>
+
+<h3>国家解析（L3 生产）</h3>
+<p>{fnum(tot_aff)} 条记录带有第一作者机构信息
+（{pct(100 * tot_aff / tot_records, 2)}）。机构字符串经四层词典程序解析为国家或地区
+（机构与城市词典加消歧规则；不插补），成功解析 {fnum(tot_parsed)} 条
+（占带机构信息记录的 {pct(100 * tot_parsed / tot_aff, 2)}），覆盖 159 个国家或地区。
+90 条记录的人工核查未发现错误。作者所在国是发表机构的属性，不是研究人群的属性。</p>
+
+<h3>负担数据（L2 输入）</h3>
+<p>GBD 2023 的 DALY（主口径）与患病数（敏感性口径），全年龄、双性别，全球汇总加
+204 个国家和地区（205 个地点），逐年 1995–2023，病因编号为 329、674、423、444、
+447、450 与 480。各国 DALY 合计可复现相应全球总量的 99.83–99.96%。DALY 的
+<i>Number</i>（绝对数）指标为主口径；下载中的全年龄率未经年龄标化，不使用。
+<b>末期配对：</b>前五期负担期与发文期一致；末期负担侧为 2020–2023 年，对发文
+2020–2024 年。这一年的不对称在凡出现末期负担相对量之处均予披露，且有一项敏感性
+分析将末期发文限制于 2020–2023 年。</p>
+
+<h3>关注/负担比（L2）</h3>
+<p>对时期 <i>t</i>，ABR ＝（某病因占七病因发文池的份额）÷（其占七病因 DALY 池的
+份额）。ABR 1 表示池内成比例；报告 log2 ABR，故 +1 表示发文份额为负担份额的两倍，
+−1 表示为其一半。两个份额是同一七病因池内的构成：ABR 是专科内部的相对度量，
+不支持池外比较。</p>
+
+<h3>地理层（L3 分析）</h3>
+<p><b>双质心距离。</b>负担质心是以国家中心点（mledoze/countries 数据集的冻结快照）
+按 DALY 加权的平均中心；研究质心为同一构造、按解析所得第一作者记录加权。主估计量为
+<b>算术平均中心</b>：纬度的加权算术平均与经度的圆周（单位向量）平均相结合；距离为
+haversine 大圆距离（R = 6,371.0088 km）。估计量是在一段有档可查的诊断之后选定的：
+最初冻结的弦平均（单位向量平均）把若干研究质心放在了不合情理的北极高纬（口腔癌
+1995–99 年位于 82.0°N），因为第一作者分布环绕太平洋、其水平分量相互抵消；球面
+几何中位数避开了极点，但对鼻咽癌退化——两个质心吸附到同一国家中心，三个连续时期的
+距离塌缩为 0.0–0.3 km。三种估计量在全部 42 个病因—时期单元上并排冻结于随存档发布的
+估计量敏感性表中；三者对每个病因首末期距离变化的方向一致。</p>
+<p><b>作者份额。</b>LMIC 份额是解析所得记录中第一作者机构位于低收入或中等收入国家
+（世界银行低收入、下中等收入与上中等收入组别合并）的比例，并作剔除中国的分解。
+收入组别为 2026 年 11 月 12 日冻结的世界银行分类，<b>全部时期固定不变</b>——这是
+已披露的简化，因为各国的分类在 30 年间发生过变化。对负担层病因，还报告位于其
+DALY 前十国家的第一作者份额。</p>
+
+<h3>脱钩分型（L4）</h3>
+<p>每个负担层病因由比较首末期的三个信号归型：S，14 区池发文份额的相对变化；B，七病因
+DALY 池份额的相对变化；A，log2 ABR 的变化。签批方案固定了型名与定义——解决稀释型、
+技术点燃型、负担同行型、恒定型——凡不合任何规则者如实报为<b>未归型，绝不硬塞</b>。
+方案未固定数值阈值；阈值在分型阶段、归型运行之前操作化（主阈值 S 与 B 为 ±25%、
+A 为 ±0.5；±15%/±0.3 与 ±35%/±0.7 两套敏感性组别随每个归型一并报告）。因此分型是
+预设型定义之下的描述性分类，而非预注册推断。两条读法规则：B 是份额，故「负担下降」
+只表示池内相对稀释（七个病因的年化绝对 DALY 均上升，+3.9% 至 +101.3%）；型名是
+形态标签，不是机制断言。</p>
+
+<h3>敏感性方案与裁定</h3>
+<ul>
+<li><b>滞后窗。</b>将末期发文与早 0、5 或 10 年的负担配对，未改变任何病因的
+log2 ABR 符号（7/7 在各滞后下相同）；漂移每五年步至多 0.136，全程至多 0.271。</li>
+<li><b>发文窗。</b>将末期发文限制于 2020–2023 年，使每个末期 log2 ABR 的移动
+小于 0.1，且无符号变化。</li>
+<li><b>负担口径。</b>患病口径在末期符号上与主口径七者中五者一致、在趋势方向上亦
+五者一致。符号例外为喉癌与中耳炎（听力损失占七病因患病池的 92.76%，压缩了其他
+份额）；趋势例外为其他咽癌与甲状腺癌，两者在两口径下均接近持平。两项头条水平
+结论——听力损失深度低于齐平、甲状腺癌为最大超额——在两口径下均成立。</li>
+<li><b>术语漂移。</b>每个病区各设定一条备用检索式，并在取回任何备用计数之前以书面
+冻结。两个检索式在 15 行中 12 行的份额方向上一致。人工耳蜗与耳鸣仅在 ±5% 方向带
+两侧有别。<b>CRS/鼻息肉则完全翻转</b>（主式 −26.6% vs 备用式 +251.0%）：备用检索式
+只用 2003–2004 年共识术语之后才进入常规使用的现代术语，因此在结构上看不见
+鼻窦炎时代的文献。该翻转按术语迁移解读，并依方案的双式规则，CRS 份额下降撤出
+头条结论。</li>
+</ul>
+<p class="small">滞后窗与术语分析于 2026 年 11 月 12 日在主层冻结之后完成；备用
+检索式在其计数存在之前已固定。它们作为方案敏感性方案在分析阶段的完成情况报告，
+而非原始预注册时间戳的组成部分。</p>
+
+<h3>大型语言模型的使用</h3>
+<p>本项目中，大型语言模型被用作辅助工具：用于分析代码的开发与调试、分析管线的
+编排，以及稿件起草的协助。全部数据均由确定性脚本从上列公开来源生成；此处报告的
+每个数字均已对照冻结结果文件核验；任何数据、结果或图形均非由语言模型生成。</p>
+"""
+        return page("方法", body, lang="zh", rel="methods.html")
     body = f"""
 <h2>Methods</h2>
 
@@ -841,13 +1242,80 @@ by deterministic scripts from the public sources named above; every number
 reported here was verified against the frozen result files; no data, result or
 figure was generated by a language model.</p>
 """
-    return page("Methods", body)
+    return page("Methods", body, lang="en", rel="methods.html")
 
 
 # ---------------------------------------------------------------- findings
-def findings_page():
+def findings_page(lang="en"):
     hl_daly = 100 * float(hl_l["burden_share_pool"])
     hl_pub = 100 * float(hl_l["pub_share_burden_pool"])
+    if lang == "zh":
+        body = f"""
+<h2>头条结论</h2>
+<p>本普查的六项头条发现，按测量层的顺序排列，其后是预注册所记三项预期的记分卡。
+每一数量描述的都是已发表研究相对于模型化负担估计的配置关系；没有一项按临床
+重要性为疾病排序。</p>
+
+<h3>1. 发文池扩大约五倍，并向肿瘤轮转</h3>
+<p>14 区池由 1995–99 年的 {fnum(pool['1995-1999'])} 篇增至 2020–24 年的
+{fnum(pool['2020-2024'])} 篇。五种头颈部癌症合计占池份额由 {pct(fc_first)} 升至
+{pct(fc_last)}，由鼻咽癌（8.3% → 13.4%）、口腔癌（4.5% → 8.9%）与甲状腺癌
+（10.1% → 12.7%）驱动。喉癌逆其组而行（3.2% → 1.4%）：这一轮转与其说是转向肿瘤，
+不如说同样是肿瘤内部的轮转。</p>
+
+<h3>2. 中耳炎份额缩小，产出未减</h3>
+<p>其池内份额由 8.4% 降至 2.9%，而五年产出由 2,229 篇升至 3,706 篇——典型的
+分母效应：仍在增长的病区被增长更快的邻居稀释。</p>
+
+<h3>3. 听力损失是核心水平发现</h3>
+<p>2020–24 年，听力损失占七病因 DALY 池的 {pct(hl_daly)}，而只占同一池发文的
+{pct(hl_pub)}——约为其负担份额在成比例情形下所对应发文份额的三分之一。其
+log2 ABR 由 −1.05 加深至 −1.47（ABR 0.48 → 0.36），是首期已在齐平线以下、末期
+进一步下沉的唯一病因。喉癌自上方加入（−0.18 → −1.18）。另一端，甲状腺癌全程
+保持池内最大超额（+3.05 → +3.24；末期 ABR ≈ 9.45）。</p>
+
+<h3>4. 地理：方向趋同，水平未趋同</h3>
+<p>DALY 加权负担质心与第一作者研究质心之间的距离，在全部七个负担层病因上下降
+（首末期之间 −39% 至 −80%）。末期距离在绝对值上仍大——1,102 至 5,242 km：每个
+病因的研究中心仍位于与其负担中心不同的地图区域。路径并不都平滑：鼻咽癌的距离
+在 2015–19 年降至 978 km，随后回升至 2,467 km。详见
+<a href="geography.html">地理页</a>。</p>
+
+<h3>5. 作者基础展宽</h3>
+<p>全部病区合并，第一作者中的低收入和中等收入国家（LMIC）份额由 1995–99 年的
+7.9% 升至 2020–24 年的 39.8%。这一上升多由中国贡献（占全部解析记录的
+2.5% → 21.9%），但并非全部：剔除中国后，LMIC 占全部解析记录的份额仍由 5.4%
+升至 17.9%。</p>
+
+<h3>6. 分型：两个稳健型、一个稳定错配、三个未归型</h3>
+<p>在规则化脱钩分型下，中耳炎为解决稀释型（仅为相对份额稀释——七个病因的年化
+绝对 DALY 均上升）。鼻咽癌与口腔癌为技术点燃型，是三套阈值下归型不变的仅有的
+两个。听力损失仅按动态归为<b>恒定型</b>，必须与其水平一并读——2020–24 年
+ABR 0.36，池内最深缺口：稳定的错配，而非没有错配。喉癌、其他咽癌与甲状腺癌在
+主阈值下不合任何规则，如实报为<i>未归型</i>，不硬塞入任何类型。详见
+<a href="typology.html">分型页</a>。</p>
+
+<div class="caveat"><b>慢性鼻窦炎/鼻息肉。</b>{CRS_CAVEAT_ZH}因此，CRS 份额下降
+不计入上述头条发现。</div>
+
+<h3>预注册预期记分卡</h3>
+<table>
+<tr><th class="l">预期（按注册原文）</th><th class="l">裁定</th><th class="l">数据所示</th></tr>
+<tr><td class="l">（1）经典感染性疾病的发文份额将下降，但绝对产出不降。</td>
+<td class="l"><span class="verdict">完全符合</span></td>
+<td class="l">中耳炎即典型案例：份额 8.4% → 2.9%；产出每期 2,229 → 3,706 篇。</td></tr>
+<tr><td class="l">（2）负担正向低收入地区迁移，而研究地理不跟随。</td>
+<td class="l"><span class="verdict">大体不成立</span></td>
+<td class="l">研究地理实际上跟随了：七个病因的质心距离在三种估计量下全部收缩，第一作者 LMIC 份额由 7.9% 升至 39.8%。该预期仅以其水平形式存留——剩余距离仍为 1,102–5,242 km。</td></tr>
+<tr><td class="l">（3）份额增益将集中于有治疗或技术变迁标记的疾病。</td>
+<td class="l"><span class="verdict">一半符合</span></td>
+<td class="l">头颈部癌症符合该预期。阻塞性睡眠呼吸暂停是最清晰的技术关联病区，其份额只上升了一步便进入平台期，2005 年以来每年的份额都约为 12–13%。原先系于该预期的 CRS 一点，现按术语迁移解读（见上注），不作为生物制剂时代任何方向的证据。</td></tr>
+</table>
+<p class="small">一全符合、一大体落空、一半符合——这正是预注册描述性研究应当发表的
+记分卡；落空的预期（2）反而是信息量更大的结果，因为它排除了本专科「研究忽视
+负担迁移」叙事的最简单版本。</p>
+"""
+        return page("头条结论", body, lang="zh", rel="findings.html")
     body = f"""
 <h2>Findings</h2>
 <p>The census's six headline findings, in the order of the measurement layers,
@@ -930,17 +1398,19 @@ expectation (2) is the more informative result, because it rules out the
 simplest version of the "research ignores the shifting burden" narrative for
 this specialty.</p>
 """
-    return page("Findings", body)
+    return page("Findings", body, lang="en", rel="findings.html")
 
 
 # ---------------------------------------------------------------- geography
-def geography_page():
+def geography_page(lang="en"):
+    zh = lang == "zh"
+    names = NAMES_ZH if zh else NAMES
     rows = []
     for a in BURDEN:
         dv = [float(dist[(a, p)]["distance_km"]) for p in PERIODS]
         chg = 100 * (dv[-1] - dv[0]) / dv[0]
         cells = "".join(f"<td>{km(v)}</td>" for v in dv)
-        rows.append(f'<tr><td class="l">{escape(NAMES[a])}</td>{cells}'
+        rows.append(f'<tr><td class="l">{escape(names[a])}</td>{cells}'
                     f'<td>{signed_pct(chg)}</td></tr>')
     lmic_rows = []
     for p in PERIODS:
@@ -948,6 +1418,43 @@ def geography_page():
         exc = float(lmic[p]["lmic_share_excl_china"])
         lmic_rows.append(f'<tr><td class="l">{PLAB[p]}</td><td>{pct(tot)}</td>'
                          f'<td>{pct(tot - exc)}</td><td>{pct(exc)}</td></tr>')
+    if zh:
+        body = f"""
+<h2>地理：负担质心与研究质心</h2>
+<p>对每个负担层病因与时期，在同一组国家中心点上计算两个中心。<b>负担质心</b>按
+GBD 2023 DALY 数加权——位于该病因负担所在之处。<b>研究质心</b>按解析所得第一作者
+记录加权——位于该病因发文作者所在之处。两者均使用<b>算术平均中心</b>（国家中心点
+纬度的加权算术平均与经度的圆周平均相结合；质心冻结 v2），两者之间的距离为
+haversine 大圆距离。估计量的诊断经过，以及与被其替代的两种估计量的并排比较，
+记于<a href="methods.html">方法页</a>与<a href="downloads.html">下载页</a>的冻结
+估计量敏感性表。</p>
+
+<h3>双质心距离（km）</h3>
+<table>
+<tr><th class="l">病因</th>{''.join(f'<th>{PLAB[p]}</th>' for p in PERIODS)}<th>首 → 末变化</th></tr>
+{''.join(rows)}
+</table>
+<p>七个病因的距离全部下降（−39% 至 −80%）。三条路径——中耳炎、听力损失与喉癌——
+单调下降。其余并非如此：口腔癌的路径呈锯齿形（中间各期为 1,048 / 1,369 / 692 /
+1,292 km）；鼻咽癌在 2015–19 年降至 978 km，末期回升至 2,467 km，为本层最大单步
+反转；甲状腺癌在陡降后于最后一步小幅上升（1,674 → 1,756 km，+82 km）。方向趋同
+不等于水平趋同：末期距离仍为 1,102–5,242 km，故每个病因的研究中心仍位于与其
+负担中心不同的地图区域。</p>
+
+<h3>谁在发文：LMIC 第一作者份额</h3>
+<p>14 区合并，解析所得第一作者记录中作者机构位于低收入或中等收入国家（世界银行
+低收入、下中等收入与上中等收入组别合并；分类快照在全部时期固定不变，为已披露的
+简化）的份额：</p>
+<table>
+<tr><th class="l">时期</th><th>LMIC 占解析记录的份额</th><th>其中中国</th><th>剔除中国后的 LMIC</th></tr>
+{''.join(lmic_rows)}
+</table>
+<p>三列均以全部解析记录为分母，故剔除中国列即为本站通用的冻结口径（不按非中国
+记录重新归一）。这一合并上升多由中国单独贡献（占全部解析记录的 2.5% → 21.9%），
+但剔除中国后的份额仍增至三倍以上（5.4% → 17.9%）。各病区的第一作者地域——包括
+每个负担病因位于其 DALY 前十国家作者的份额——见各<a href="areas.html">病区页</a>。</p>
+"""
+        return page("地理", body, lang="zh", rel="geography.html")
     body = f"""
 <h2>Geography: burden and research centroids</h2>
 <p>For each burden-tier cause and period, two centres are computed over the
@@ -998,34 +1505,77 @@ first-author geography — including each burden cause's share of authors in
 its ten highest-DALY countries — is on the individual
 <a href="areas.html">area pages</a>.</p>
 """
-    return page("Geography", body)
+    return page("Geography", body, lang="en", rel="geography.html")
 
 
 # ---------------------------------------------------------------- typology
-def typology_page():
+def typology_page(lang="en"):
+    zh = lang == "zh"
+    names = NAMES_ZH if zh else NAMES
+    labels = TYPE_LABEL_ZH if zh else TYPE_LABEL
     rows = []
     for a in BURDEN:
         s, t = signals[a], typology[a]
         mute = ' class="mute"' if t["type_main"] == "unclassified" else ""
         rows.append(
-            f'<tr{mute}><td class="l">{escape(NAMES[a])}</td>'
+            f'<tr{mute}><td class="l">{escape(names[a])}</td>'
             f'<td>{signed_pct(float(s["S_rel_pct"]))}</td>'
             f'<td>{signed_pct(float(s["B_rel_pct"]))}</td>'
             f'<td>{float(s["A_delta"]):+.2f}</td>'
-            f'<td class="l"><b>{escape(TYPE_LABEL[t["type_main"]])}</b></td>'
-            f'<td class="l">{escape(TYPE_LABEL[t["type_low"]])}</td>'
-            f'<td class="l">{escape(TYPE_LABEL[t["type_high"]])}</td></tr>')
+            f'<td class="l"><b>{escape(labels[t["type_main"]])}</b></td>'
+            f'<td class="l">{escape(labels[t["type_low"]])}</td>'
+            f'<td class="l">{escape(labels[t["type_high"]])}</td></tr>')
     arows = []
     for a in ATTENTION:
         s, t = signals[a], typology[a]
         mark = " *" if a == "crs_polyps" else ""
         arows.append(
-            f'<tr><td class="l">{escape(NAMES[a])}{mark}</td>'
+            f'<tr><td class="l">{escape(names[a])}{mark}</td>'
             f'<td>{pct(share[(a, "1995-1999")])} → {pct(share[(a, "2020-2024")])}</td>'
             f'<td>{signed_pct(float(s["S_rel_pct"]))}</td>'
-            f'<td class="l"><b>{escape(TYPE_LABEL[t["type_main"]])}</b></td>'
-            f'<td class="l">{escape(TYPE_LABEL[t["type_low"]])}</td>'
-            f'<td class="l">{escape(TYPE_LABEL[t["type_high"]])}</td></tr>')
+            f'<td class="l"><b>{escape(labels[t["type_main"]])}</b></td>'
+            f'<td class="l">{escape(labels[t["type_low"]])}</td>'
+            f'<td class="l">{escape(labels[t["type_high"]])}</td></tr>')
+    if zh:
+        body = f"""
+<h2>脱钩分型</h2>
+<p>每个负担层病因由比较首期（1995–99）与末期（2020–24）的三个信号归型：<b>S</b>，
+14 区发文池份额的相对变化；<b>B</b>，七病因 DALY 池份额的相对变化；<b>A</b>，log2 ABR
+的变化。签批方案固定了型名、定义与三信号框架；凡不合任何规则者如实报为
+<b>未归型，绝不硬塞</b>。</p>
+
+<h3>负担层（主阈值：S 与 B 为 ±25%，A 为 ±0.5）</h3>
+<table>
+<tr><th class="l">病因</th><th>S</th><th>B</th><th>A</th><th class="l">主型</th><th class="l">低组（±15% / ±0.3）</th><th class="l">高组（±35% / ±0.7）</th></tr>
+{''.join(rows)}
+</table>
+<p>敏感性表现：鼻咽癌与口腔癌在三套阈值下均为技术点燃型——仅有的两个完全稳健的
+归型。中耳炎在主组与低组下为解决稀释型，在高组下为未归型。听力损失在主组与高组下
+为恒定型，在低组下为未归型；其型只描述动态，必须与其水平一并读——2020–24 年
+ABR 0.36（log2 ABR −1.47），池内最深缺口。在主阈值下未归型的三个病因中，喉癌在
+低组下成为解决稀释型，其他咽癌在低组下成为负担同行型，甲状腺癌在高组下成为恒定型。
+三者都位于规则边界附近；分类如实报告这一点，而非强行裁断。</p>
+
+<h3>关注层：仅份额动态标签</h3>
+<p>关注层病区没有 GBD 匹配的负担病因，因此不归型——只在相同带宽下为其池内份额
+变化的方向贴标签。</p>
+<table>
+<tr><th class="l">病区</th><th>份额 1995–99 → 2020–24</th><th>S</th><th class="l">标签（主带）</th><th class="l">低带</th><th class="l">高带</th></tr>
+{''.join(arows)}
+</table>
+<div class="caveat">* 慢性鼻窦炎/鼻息肉：{CRS_CAVEAT_ZH}</div>
+
+<h3>如何读本页</h3>
+<p><b>B 是份额，不是水平。</b>B 下降意味着七病因池内的相对稀释。七个负担层病因的
+年化绝对 DALY 在首末期之间实际上均上升（+3.9% 至 +101.3%），故解决稀释型标签中的
+「解决」仅指相对份额稀释；本页不主张任何负担在绝对意义上下降。</p>
+<p><b>阈值。</b>签批方案未固定数值阈值。此处所用阈值——主阈值 S 与 B 为 ±25%、
+A 为 ±0.5，±15%/±0.3 与 ±35%/±0.7 两套敏感性组别随每个归型一并展示——在分型阶段、
+归型运行之前操作化。因此分型是预设型定义之下的描述性分类，而非预注册推断。</p>
+<p><b>型名是形态标签，不是机制断言。</b>「技术点燃型」命名一种形态组合——发文份额
+上升、负担份额持平或下降、且 ABR 上升——并不主张其成因。</p>
+"""
+        return page("分型", body, lang="zh", rel="typology.html")
     body = f"""
 <h2>Decoupling typology</h2>
 <p>Each burden-tier cause is classified from three signals comparing the
@@ -1082,11 +1632,60 @@ type definitions, not preregistered inference.</p>
 while burden share is flat or falling, with ABR rising — and asserts
 nothing about what caused it.</p>
 """
-    return page("Typology", body)
+    return page("Typology", body, lang="en", rel="typology.html")
 
 
 # ---------------------------------------------------------------- about
-def about_page():
+def about_page(lang="en"):
+    if lang == "zh":
+        body = f"""
+<h2>关于本图谱站</h2>
+<p>耳鼻喉错配图谱站是「耳鼻喉研究关注度与疾病负担普查（1995–2024）」这一预注册
+研究的开放资源层。它按病区、时期与国家开放该普查的冻结结果——发文份额、
+关注/负担比、负担—研究双质心距离与脱钩分型——供再利用，也供在其他专科复现本
+设计：本管线在结构上与专科无关（一个冻结的疾病池、一个公开文献来源、一个公开
+负担来源，加上上述四层测量）。</p>
+
+<h3>出处</h3>
+<p class="kv">
+<b>预注册：</b>开放科学框架（OSF）项目 42ytu；注册
+DOI <a href="{OSF_URL}">{OSF_DOI}</a>。方案在记录级生产开始之前注册；修订书
+v1.1（以 GBD 2023 替代 IHME 已退役的 GBD 2021）随注册存档。<br>
+<b>冻结存档：</b>Zenodo，DOI <a href="{ZENODO_URL}">{ZENODO_DOI}</a>——全部冻结
+表格、记录级国家解析表、GBD 输入摘录、全部生产与绘图代码及项目文件。<br>
+<b>本站规范网址：</b><a href="{CANONICAL}/">{CANONICAL}</a><br>
+<b>冻结于：</b>2026 年 11 月 12 日。本站为由冻结结果文件生成的静态网站；不随
+新数据出现而更新。</p>
+
+<h3>作者</h3>
+<p>雷沛亮（通讯作者）、董文荣、谭静怡、杨晓颖<br>
+石家庄市第三医院耳鼻喉科，中国河北。</p>
+
+<h3>数据来源</h3>
+<ul>
+<li><b>发文：</b>Europe PMC——冻结题名/摘要检索式，1995–2024 年计数，及地理层的
+记录级拉取。</li>
+<li><b>负担：</b>全球疾病负担（GBD）2023 估计（IHME）——DALY 为主口径、患病数为
+敏感性口径——七个匹配病因，1995–2023 年。</li>
+<li><b>国家分类：</b>世界银行收入分类（快照于 2026 年 11 月 12 日冻结，全部时期
+固定不变）；国家中心点取自 mledoze/countries 数据集的冻结快照。</li>
+</ul>
+
+<h3>引用方式</h3>
+<div class="note">
+Lei P, Dong W, Tan J, Yang X. <i>Research attention and disease burden in
+otolaryngology, 1995–2024: a preregistered dynamic census of publication
+shares, attention–burden ratios and research geography.</i> Manuscript in
+preparation for <i>Scientometrics</i>.<br>
+预注册：<a href="{OSF_URL}">doi.org/{OSF_DOI}</a> ·
+冻结数据与代码：<a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a> ·
+图谱站：<a href="{CANONICAL}/">burden.erbihou.org</a>
+</div>
+<p class="small">范围边界：本图谱站的每一数量描述的都是已发表研究相对于模型化
+负担估计的配置关系。此处不对疾病按临床重要性排序，也不陈述任何疾病应获得
+多少研究。</p>
+"""
+        return page("关于", body, lang="zh", rel="about.html")
     body = f"""
 <h2>About this atlas</h2>
 <p>The ENT Burden Atlas is the open resource layer of a preregistered census
@@ -1147,7 +1746,7 @@ configuration of published research relative to modelled burden estimates.
 Nothing here ranks diseases by clinical importance or states how much
 research any disease should receive.</p>
 """
-    return page("About", body)
+    return page("About", body, lang="en", rel="about.html")
 
 
 # ---------------------------------------------------------------- downloads
@@ -1171,13 +1770,60 @@ DOWNLOAD_FILES = [
 ]
 
 
-def downloads_page():
+DOWNLOAD_DESC_ZH = [
+    "L1 按年发文计数（主检索式）",
+    "L1 按年发文计数（备用检索式）",
+    "术语敏感性：主式与备用式方向",
+    "ABR 主口径（DALY 份额），42 个单元",
+    "ABR 患病口径敏感性，42 个单元",
+    "ABR 发文窗敏感性（2020–23），42 个单元",
+    "ABR 滞后窗敏感性（0/5/10 年）",
+    "双质心距离与质心（主估计量），42 个单元",
+    "全部 14 区的研究质心",
+    "第一作者 LMIC 与负担前 10 国家份额",
+    "质心估计量敏感性（3 种估计量 × 42 个单元）",
+    "合并 LMIC 第一作者份额序列（含剔除中国）",
+    "按病区 × 时期 × 国家解析的第一作者记录数",
+    "按病区 × 时期的国家解析覆盖率",
+    "全部 14 区的 L4 分型信号（S、B、A）",
+    "三套阈值组下的 L4 分型结果",
+]
+
+
+def downloads_page(lang="en"):
+    zh = lang == "zh"
+    file_pre = "../" if zh else ""
+    descs = DOWNLOAD_DESC_ZH if zh else [d for _r, d in DOWNLOAD_FILES]
     rows = []
-    for rel, desc in DOWNLOAD_FILES:
+    for (rel, _desc), desc in zip(DOWNLOAD_FILES, descs):
         name = os.path.basename(rel)
         size = os.path.getsize(os.path.join(ROOT, rel))
-        rows.append(f'<tr><td class="l"><a href="downloads/{name}">{name}</a></td>'
+        rows.append(f'<tr><td class="l"><a href="{file_pre}downloads/{name}">{name}</a></td>'
                     f'<td class="l">{escape(desc)}</td><td>{size:,}</td></tr>')
+    if zh:
+        body = f"""
+<h2>下载</h2>
+<p>本站每个数字背后的冻结结果表，可逐个下载 CSV 文件，或打包为一个存档：
+<a href="{file_pre}downloads/frozen_tables.zip"><b>frozen_tables.zip</b></a>。</p>
+<table>
+<tr><th class="l">文件</th><th class="l">内容</th><th>字节</th></tr>
+{''.join(rows)}
+</table>
+<h3>完整存档与代码</h3>
+<ul>
+<li><b>Zenodo 存档</b>——完整冻结快照（上表全部表格，加上 392,456 条记录的记录级
+国家解析表、GBD 输入摘录、参考表、全部生产与绘图代码及项目文件）：
+<a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a>。</li>
+<li><b>生产代码</b>——检索式、GBD 映射、解析与指标代码、绘图脚本及本站生成器，
+与冻结数据一并存于上述 Zenodo 记录：
+<a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a>。</li>
+<li><b>预注册</b>——方案与修订书 v1.1（GBD 2023）：
+<a href="{OSF_URL}">doi.org/{OSF_DOI}</a>。</li>
+</ul>
+<p class="small">记录级 Europe PMC 元数据仍可从 Europe PMC 获取；GBD 2023 估计仍可
+从 IHME 获取。本站只再发布本研究的冻结派生表格。</p>
+"""
+        return page("下载", body, lang="zh", rel="downloads.html")
     body = f"""
 <h2>Downloads</h2>
 <p>The frozen result tables behind every number on this site, as individual CSV
@@ -1204,7 +1850,7 @@ with the frozen data in the Zenodo record above:
 GBD 2023 estimates remain available from the Institute for Health Metrics and
 Evaluation. This site redistributes only this study's frozen derived tables.</p>
 """
-    return page("Downloads", body)
+    return page("Downloads", body, lang="en", rel="downloads.html")
 
 
 # ---------------------------------------------------------------- build
@@ -1214,27 +1860,55 @@ def build():
     os.makedirs(os.path.join(OUT, "assets"))
     os.makedirs(os.path.join(OUT, "areas"))
     os.makedirs(os.path.join(OUT, "downloads"))
+    os.makedirs(os.path.join(OUT, "zh", "areas"))
     with open(os.path.join(OUT, "assets", "style.css"), "w", encoding="utf-8") as fh:
         fh.write(CSS)
     with open(os.path.join(OUT, "CNAME"), "w", encoding="utf-8") as fh:
         fh.write("burden.erbihou.org\n")
     with open(os.path.join(OUT, ".nojekyll"), "w", encoding="utf-8") as fh:
         fh.write("")
-    pages = {"index.html": home(), "areas.html": areas_page(),
-             "findings.html": findings_page(), "geography.html": geography_page(),
-             "typology.html": typology_page(), "methods.html": methods_page(),
-             "downloads.html": downloads_page(), "about.html": about_page()}
+    pages = {"index.html": home("en"), "areas.html": areas_page("en"),
+             "findings.html": findings_page("en"),
+             "geography.html": geography_page("en"),
+             "typology.html": typology_page("en"),
+             "methods.html": methods_page("en"),
+             "downloads.html": downloads_page("en"),
+             "about.html": about_page("en")}
     for a in AREAS:
         pages[f"areas/{a}.html"] = area_page(a)
+    pages_zh = {"index.html": home("zh"), "areas.html": areas_page("zh"),
+                "findings.html": findings_page("zh"),
+                "geography.html": geography_page("zh"),
+                "typology.html": typology_page("zh"),
+                "methods.html": methods_page("zh"),
+                "downloads.html": downloads_page("zh"),
+                "about.html": about_page("zh")}
+    for a in AREAS:
+        pages_zh[f"areas/{a}.html"] = area_page_zh(a)
     # structural assertions on the assembled site
-    check("total pages = 22", len(pages) == 22)
-    nav_targets = ["index.html", "areas.html", "findings.html", "geography.html",
-                   "typology.html", "methods.html", "downloads.html", "about.html"]
-    for rel, html in pages.items():
-        pre = "../" if rel.startswith("areas/") else ""
-        check(f"nav complete on {rel}",
-              all(f'href="{pre}{t}"' in html for t in nav_targets))
-        check(f"no github URL on {rel}", "github.com/yuye8848" not in html)
+    check("total pages = 22 (en)", len(pages) == 22)
+    check("total pages = 22 (zh)", len(pages_zh) == 22)
+    check("zh mirror covers every en page", set(pages_zh) == set(pages))
+    nav_targets = [t for t, _e, _z in NAV]
+    for lang, pdict in (("en", pages), ("zh", pages_zh)):
+        for rel, html in pdict.items():
+            depth = 1 if rel.startswith("areas/") else 0
+            pre = "../" * depth
+            check(f"nav complete on {lang}/{rel}",
+                  all(f'href="{pre}{t}"' in html for t in nav_targets))
+            check(f"no github URL on {lang}/{rel}",
+                  "github.com/yuye8848" not in html)
+            check(f"css v{ASSET_V} on {lang}/{rel}",
+                  f"assets/style.css?v={ASSET_V}" in html)
+            if lang == "en":
+                check(f"toggle to zh on en/{rel}",
+                      f'href="{pre}zh/{rel}">中文</a>' in html)
+            else:
+                check(f"toggle to en on zh/{rel}",
+                      f'href="{"../" * (depth + 1)}{rel}">EN</a>' in html)
+                check(f"zh nav labels on zh/{rel}",
+                      all(f'href="{pre}{t}">{z}</a>' in html
+                          for t, _e, z in NAV))
     check("CRS asterisk card on home",
           'crs_polyps.html">Chronic rhinosinusitis / nasal polyps (CRS) *</a>'
           in pages["index.html"])
@@ -1261,8 +1935,82 @@ def build():
           "Next:" in first and "Previous:" not in first)
     check("last area page has Previous only",
           "Previous:" in last and "Next:" not in last)
+    # --- Chinese-mirror content assertions (same numbers, project terminology)
+    check("CRS asterisk card on zh home",
+          'crs_polyps.html">慢性鼻窦炎/鼻息肉（CRS） *</a>'
+          in pages_zh["index.html"])
+    check("CRS caveat note under zh home grid",
+          "份额下降" in pages_zh["index.html"]
+          and "+251.0%" in pages_zh["index.html"]
+          and "术语迁移" in pages_zh["index.html"])
+    check("zh typology page mutes unclassified rows",
+          pages_zh["typology.html"].count('class="mute"') == 3)
+    check("zh typology page labels unclassified 未归型",
+          "未归型" in pages_zh["typology.html"])
+    check("zh typology page carries CRS caveat",
+          "术语迁移" in pages_zh["typology.html"])
+    check("zh findings pairs hearing 恒定型 with ABR 0.36",
+          "恒定型</b>" in pages_zh["findings.html"]
+          and "ABR 0.36" in pages_zh["findings.html"])
+    check("zh findings scorecard verdicts present",
+          all(v in pages_zh["findings.html"] for v in
+              ("完全符合", "大体不成立", "一半符合")))
+    check("zh about page carries both DOIs",
+          OSF_DOI in pages_zh["about.html"]
+          and ZENODO_DOI in pages_zh["about.html"])
+    check("zh about keeps English citation title",
+          "Research attention and disease burden in" in pages_zh["about.html"]
+          and "preregistered dynamic census of publication"
+          in pages_zh["about.html"])
+    check("zh about authors in Chinese",
+          all(n in pages_zh["about.html"] for n in
+              ("雷沛亮", "董文荣", "谭静怡", "杨晓颖", "石家庄市第三医院耳鼻喉科")))
+    check("CRS caveat on zh areas overview",
+          "术语迁移" in pages_zh["areas.html"])
+    check("CRS caveat on zh CRS area page",
+          "术语迁移" in pages_zh["areas/crs_polyps.html"])
+    check("zh hearing page pairs 恒定型 with ABR 0.36",
+          "恒定型" in pages_zh["areas/hearing_loss.html"]
+          and "ABR 0.36" in pages_zh["areas/hearing_loss.html"])
+    for a in AREAS:
+        html = pages_zh[f"areas/{a}.html"]
+        check(f"zh breadcrumb on {a}",
+              "首页</a> ›" in html and f"› {escape(NAMES_ZH[a])}</p>" in html)
+    zfirst = pages_zh["areas/otitis_media.html"]
+    zlast = pages_zh["areas/cochlear_implant.html"]
+    check("zh first area page has 下一区 only",
+          "下一区：" in zfirst and "上一区：" not in zfirst)
+    check("zh last area page has 上一区 only",
+          "上一区：" in zlast and "下一区：" not in zlast)
+    # numeric identity: on the table-driven pages the multiset of numeric
+    # tokens must be identical between the English page and its Chinese
+    # mirror (same formatted values from the same frozen files).
+    import re as _re
+    from collections import Counter as _Counter
+
+    def _nums(html):
+        text = _re.sub(r"<[^>]+>", " ", html)
+        return _Counter(_re.findall(r"\d+(?:,\d{3})*(?:\.\d+)?", text))
+
+    for rel in ["areas.html", "geography.html", "typology.html",
+                "downloads.html"] + [f"areas/{a}.html" for a in AREAS]:
+        check(f"numeric tokens identical en/zh on {rel}",
+              _nums(pages[rel]) == _nums(pages_zh[rel]))
+    for rel, needles in (
+            ("index.html", ["26,544", "128,117", "32.1%", "44.6%", "0.36",
+                            "39.8%", "392,456", "+251.0%"]),
+            ("findings.html", ["8.3%", "13.4%", "−1.47", "9.45", "978",
+                               "2,467", "39.8%", "17.9%"]),
+            ("methods.html", ["392,458", "4,806", "11,603", "92.76%",
+                              "6,371.0088", "82.0", "+251.0%"]),
+            ("about.html", ["42", "2026"])):
+        for n in needles:
+            check(f"zh {rel} carries number {n}", n in pages_zh[rel])
     for rel, html in pages.items():
         with open(os.path.join(OUT, rel), "w", encoding="utf-8") as fh:
+            fh.write(html)
+    for rel, html in pages_zh.items():
+        with open(os.path.join(OUT, "zh", rel), "w", encoding="utf-8") as fh:
             fh.write(html)
     for rel, _desc in DOWNLOAD_FILES:
         shutil.copyfile(os.path.join(ROOT, rel),
@@ -1274,7 +2022,8 @@ def build():
     print(f"assertions passed: {len(CHECKS)}/{len(CHECKS)}")
     for label, ok in CHECKS:
         print(("PASS " if ok else "FAIL ") + label)
-    print(f"pages written: {len(pages)} -> {OUT}")
+    print(f"pages written: {len(pages) + len(pages_zh)} "
+          f"({len(pages)} en + {len(pages_zh)} zh) -> {OUT}")
     return 0
 
 
