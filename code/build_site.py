@@ -86,7 +86,7 @@ CRS_CAVEAT = ("Terminology caveat: under a pre-frozen backup query built only "
 # Terminology is taken verbatim from the project's Chinese documents (signed
 # work report v1 2026-11-08; L4 typology rule table 2026-11-12; terminology
 # freeze and sensitivity verdict 2026-11-12; manuscript drafting brief):
-# 关注/负担比 (ABR), 双质心距离, 脱钩分型, 解决稀释型 / 技术点燃型 / 负担同行型 /
+# 关注/负担比 (ABR), 双重心距离, 脱钩分型, 解决稀释型 / 技术点燃型 / 负担同行型 /
 # 恒定型 / 未归型, 份额上升型 / 份额稳定型 / 份额下降型, 负担层 / 关注层,
 # 幽灵记录, 弦平均, 几何中位数, 算术平均中心.
 NAMES_ZH = {
@@ -535,7 +535,7 @@ def home(lang="en"):
 研究关注度与疾病负担的对齐情况。发文量取自 Europe PMC，覆盖 14 个病区
 （1995–2024；可取回记录 {fnum(tot_records)} 条）；其中 7 个病区有匹配的全球疾病负担
 （GBD）2023 病因，其产出与 DALY 负担（1995–2023）对置。四层测量在同一尺度上报告：
-发文份额动态、关注/负担比（ABR）、负担质心与研究质心之间的双质心距离，以及规则化
+发文份额动态、关注/负担比（ABR）、负担重心与研究重心之间的双重心距离，以及规则化
 脱钩分型。本设计在记录级数据拉取之前已经注册
 （<a href="{OSF_URL}">OSF 注册，DOI {OSF_DOI}</a>）。</p>
 
@@ -568,7 +568,7 @@ def home(lang="en"):
 增至 3,706 篇——分母效应。</li>
 <li><b>听力损失是核心的水平发现。</b>它占七病因 DALY 池的 {pct(hl_daly)}，而只占同一池
 发文的 {pct(hl_pub)}，且缺口在 30 年间扩大（log2 ABR −1.05 → −1.47）。</li>
-<li><b>地理上方向趋同，水平未趋同。</b>负担—研究双质心距离在全部 7 个负担层病因上
+<li><b>地理上方向趋同，水平未趋同。</b>负担—研究双重心距离在全部 7 个负担层病因上
 下降（−39% 至 −80%），但末期距离仍为 1,102–5,242 km。</li>
 <li><b>分型：</b>中耳炎为解决稀释型（相对份额稀释——七个病因的绝对 DALY 均上升）；
 鼻咽癌与口腔癌在三套阈值下均为技术点燃型；听力损失在动态上为恒定型，但处于深度负水平
@@ -696,7 +696,7 @@ def areas_page(lang="en"):
 <h2>14 个病区</h2>
 <p>份额是 14 区发文池内的构成
 （1995–99 年 {fnum(pool['1995-1999'])} 条记录；2020–24 年 {fnum(pool['2020-2024'])} 条）。
-负担层病区的各自页面还载有 ABR、双质心距离与分型结果。关注层病区没有 GBD 匹配的
+负担层病区的各自页面还载有 ABR、双重心距离与分型结果。关注层病区没有 GBD 匹配的
 负担病因，因此不为其计算或暗示任何负担量。</p>
 <table>
 <tr><th class="l">病区</th><th>份额轨迹</th><th>1995–99 发文</th>
@@ -934,9 +934,9 @@ def area_page_zh(a):
                          '（log2 ABR −1.47），即占池内 DALY 的 72.7% 对占池内发文的 '
                          '26.3%，且缺口在 30 年间扩大。</div>')
         dvals = [float(dist[(a, p)]["distance_km"]) for p in PERIODS]
-        parts.append("<h3>负担—研究双质心距离</h3>")
+        parts.append("<h3>负担—研究双重心距离</h3>")
         parts.append(spark(dvals, color="#0e7490", vfmt="{:,.0f}", lang="zh"))
-        parts.append('<p class="figcap">DALY 加权负担质心与第一作者研究质心之间的'
+        parts.append('<p class="figcap">DALY 加权负担重心与第一作者研究重心之间的'
                      '大圆距离（km）（算术平均中心；见方法页）。</p>')
         trd = "".join(f"<td>{km(float(dist[(a, p)]['distance_km']))}</td>" for p in PERIODS)
         parts.append(f"""<table>
@@ -1051,13 +1051,13 @@ hitCount 口径（392,458 条记录）。为地理层所做的记录级拉取共
 不支持池外比较。</p>
 
 <h3>地理层（L3 分析）</h3>
-<p><b>双质心距离。</b>负担质心是以国家中心点（mledoze/countries 数据集的冻结快照）
-按 DALY 加权的平均中心；研究质心为同一构造、按解析所得第一作者记录加权。主估计量为
+<p><b>双重心距离。</b>负担重心是以国家中心点（mledoze/countries 数据集的冻结快照）
+按 DALY 加权的平均中心；研究重心为同一构造、按解析所得第一作者记录加权。主估计量为
 <b>算术平均中心</b>：纬度的加权算术平均与经度的圆周（单位向量）平均相结合；距离为
 haversine 大圆距离（R = 6,371.0088 km）。估计量是在一段有档可查的诊断之后选定的：
-最初冻结的弦平均（单位向量平均）把若干研究质心放在了不合情理的北极高纬（口腔癌
+最初冻结的弦平均（单位向量平均）把若干研究重心放在了不合情理的北极高纬（口腔癌
 1995–99 年位于 82.0°N），因为第一作者分布环绕太平洋、其水平分量相互抵消；球面
-几何中位数避开了极点，但对鼻咽癌退化——两个质心吸附到同一国家中心，三个连续时期的
+几何中位数避开了极点，但对鼻咽癌退化——两个重心吸附到同一国家中心，三个连续时期的
 距离塌缩为 0.0–0.3 km。三种估计量在全部 42 个病因—时期单元上并排冻结于随存档发布的
 估计量敏感性表中；三者对每个病因首末期距离变化的方向一致。</p>
 <p><b>作者份额。</b>LMIC 份额是解析所得记录中第一作者机构位于低收入或中等收入国家
@@ -1275,7 +1275,7 @@ log2 ABR 由 −1.05 加深至 −1.47（ABR 0.48 → 0.36），是首期已在�
 保持池内最大超额（+3.05 → +3.24；末期 ABR ≈ 9.45）。</p>
 
 <h3>4. 地理：方向趋同，水平未趋同</h3>
-<p>DALY 加权负担质心与第一作者研究质心之间的距离，在全部七个负担层病因上下降
+<p>DALY 加权负担重心与第一作者研究重心之间的距离，在全部七个负担层病因上下降
 （首末期之间 −39% 至 −80%）。末期距离在绝对值上仍大——1,102 至 5,242 km：每个
 病因的研究中心仍位于与其负担中心不同的地图区域。路径并不都平滑：鼻咽癌的距离
 在 2015–19 年降至 978 km，随后回升至 2,467 km。详见
@@ -1306,7 +1306,7 @@ ABR 0.36，池内最深缺口：稳定的错配，而非没有错配。喉癌、
 <td class="l">中耳炎即典型案例：份额 8.4% → 2.9%；产出每期 2,229 → 3,706 篇。</td></tr>
 <tr><td class="l">（2）负担正向低收入地区迁移，而研究地理不跟随。</td>
 <td class="l"><span class="verdict">大体不成立</span></td>
-<td class="l">研究地理实际上跟随了：七个病因的质心距离在三种估计量下全部收缩，第一作者 LMIC 份额由 7.9% 升至 39.8%。该预期仅以其水平形式存留——剩余距离仍为 1,102–5,242 km。</td></tr>
+<td class="l">研究地理实际上跟随了：七个病因的重心距离在三种估计量下全部收缩，第一作者 LMIC 份额由 7.9% 升至 39.8%。该预期仅以其水平形式存留——剩余距离仍为 1,102–5,242 km。</td></tr>
 <tr><td class="l">（3）份额增益将集中于有治疗或技术变迁标记的疾病。</td>
 <td class="l"><span class="verdict">一半符合</span></td>
 <td class="l">头颈部癌症符合该预期。阻塞性睡眠呼吸暂停是最清晰的技术关联病区，其份额只上升了一步便进入平台期，2005 年以来每年的份额都约为 12–13%。原先系于该预期的 CRS 一点，现按术语迁移解读（见上注），不作为生物制剂时代任何方向的证据。</td></tr>
@@ -1420,16 +1420,16 @@ def geography_page(lang="en"):
                          f'<td>{pct(tot - exc)}</td><td>{pct(exc)}</td></tr>')
     if zh:
         body = f"""
-<h2>地理：负担质心与研究质心</h2>
-<p>对每个负担层病因与时期，在同一组国家中心点上计算两个中心。<b>负担质心</b>按
-GBD 2023 DALY 数加权——位于该病因负担所在之处。<b>研究质心</b>按解析所得第一作者
+<h2>地理：负担重心与研究重心</h2>
+<p>对每个负担层病因与时期，在同一组国家中心点上计算两个中心。<b>负担重心</b>按
+GBD 2023 DALY 数加权——位于该病因负担所在之处。<b>研究重心</b>按解析所得第一作者
 记录加权——位于该病因发文作者所在之处。两者均使用<b>算术平均中心</b>（国家中心点
-纬度的加权算术平均与经度的圆周平均相结合；质心冻结 v2），两者之间的距离为
+纬度的加权算术平均与经度的圆周平均相结合；重心冻结 v2），两者之间的距离为
 haversine 大圆距离。估计量的诊断经过，以及与被其替代的两种估计量的并排比较，
 记于<a href="methods.html">方法页</a>与<a href="downloads.html">下载页</a>的冻结
 估计量敏感性表。</p>
 
-<h3>双质心距离（km）</h3>
+<h3>双重心距离（km）</h3>
 <table>
 <tr><th class="l">病因</th>{''.join(f'<th>{PLAB[p]}</th>' for p in PERIODS)}<th>首 → 末变化</th></tr>
 {''.join(rows)}
@@ -1642,7 +1642,7 @@ def about_page(lang="en"):
 <h2>关于本图谱站</h2>
 <p>耳鼻喉错配图谱站是「耳鼻喉研究关注度与疾病负担普查（1995–2024）」这一预注册
 研究的开放资源层。它按病区、时期与国家开放该普查的冻结结果——发文份额、
-关注/负担比、负担—研究双质心距离与脱钩分型——供再利用，也供在其他专科复现本
+关注/负担比、负担—研究双重心距离与脱钩分型——供再利用，也供在其他专科复现本
 设计：本管线在结构上与专科无关（一个冻结的疾病池、一个公开文献来源、一个公开
 负担来源，加上上述四层测量）。</p>
 
@@ -1658,8 +1658,8 @@ v1.1（以 GBD 2023 替代 IHME 已退役的 GBD 2021）随注册存档。<br>
 新数据出现而更新。</p>
 
 <h3>作者</h3>
-<p>雷沛亮（通讯作者）、董文荣、谭静怡、杨晓颖<br>
-石家庄市第三医院耳鼻喉科，中国河北。</p>
+<p>Peiliang Lei（通讯作者）、Wenrong Dong、Jingyi Tan、Xiaoying Yang<br>
+Department of Otolaryngology, Third Hospital of Shijiazhuang, Hebei, China.</p>
 
 <h3>数据来源</h3>
 <ul>
@@ -1778,10 +1778,10 @@ DOWNLOAD_DESC_ZH = [
     "ABR 患病口径敏感性，42 个单元",
     "ABR 发文窗敏感性（2020–23），42 个单元",
     "ABR 滞后窗敏感性（0/5/10 年）",
-    "双质心距离与质心（主估计量），42 个单元",
-    "全部 14 区的研究质心",
+    "双重心距离与重心（主估计量），42 个单元",
+    "全部 14 区的研究重心",
     "第一作者 LMIC 与负担前 10 国家份额",
-    "质心估计量敏感性（3 种估计量 × 42 个单元）",
+    "重心估计量敏感性（3 种估计量 × 42 个单元）",
     "合并 LMIC 第一作者份额序列（含剔除中国）",
     "按病区 × 时期 × 国家解析的第一作者记录数",
     "按病区 × 时期的国家解析覆盖率",
@@ -1962,9 +1962,18 @@ def build():
           "Research attention and disease burden in" in pages_zh["about.html"]
           and "preregistered dynamic census of publication"
           in pages_zh["about.html"])
-    check("zh about authors in Chinese",
+    check("zh about authors and affiliation in English",
           all(n in pages_zh["about.html"] for n in
-              ("雷沛亮", "董文荣", "谭静怡", "杨晓颖", "石家庄市第三医院耳鼻喉科")))
+              ("Peiliang Lei", "Wenrong Dong", "Jingyi Tan", "Xiaoying Yang",
+               "Department of Otolaryngology, Third Hospital of Shijiazhuang")))
+    check("zh pages contain no 质心 (term is 双重心)",
+          all("质心" not in h for h in pages_zh.values()))
+    check("zh pages contain no 石家庄 (affiliation in English)",
+          all("石家庄" not in h for h in pages_zh.values()))
+    check("zh geography pins 双重心距离",
+          "双重心距离" in pages_zh["geography.html"]
+          and "负担重心" in pages_zh["geography.html"]
+          and "研究重心" in pages_zh["geography.html"])
     check("CRS caveat on zh areas overview",
           "术语迁移" in pages_zh["areas.html"])
     check("CRS caveat on zh CRS area page",
