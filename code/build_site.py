@@ -185,6 +185,94 @@ check("retrievable records 392,456", tot_records == 392456)
 check("with affiliation 356,332", tot_aff == 356332)
 check("parsed 340,582", tot_parsed == 340582)
 
+# --- assertions for the A–F extension (home cards, findings, geography,
+# --- typology pages); expectations transcribed from the frozen record
+# --- (manuscript §3.2–3.4, centroid FREEZE_v2, L4 freeze).
+EXP_ABR_LAST = {"otitis_media": 1.27, "hearing_loss": 0.36, "larynx_cancer": 0.44,
+                "oral_cancer": 1.57, "nasopharynx_cancer": 5.94,
+                "other_pharynx_cancer": 2.82, "thyroid_cancer": 9.45}
+for a, v in EXP_ABR_LAST.items():
+    check(f"ABR last {a} = {v}",
+          close(float(abr[(a, "2020-2024")]["abr"]), v, 0.01))
+check("otitis media publications 2,229 first", pcount[("otitis_media", "1995-1999")] == 2229)
+check("otitis media publications 3,706 last", pcount[("otitis_media", "2020-2024")] == 3706)
+check("hearing publications 5,411 first", pcount[("hearing_loss", "1995-1999")] == 5411)
+check("hearing publications 21,659 last", pcount[("hearing_loss", "2020-2024")] == 21659)
+lar_f, lar_l = abr[("larynx_cancer", "1995-1999")], abr[("larynx_cancer", "2020-2024")]
+check("larynx log2 ABR first −0.18", close(float(lar_f["log2_abr"]), -0.18, 0.01))
+check("larynx log2 ABR last −1.18", close(float(lar_l["log2_abr"]), -1.18, 0.01))
+thy_f, thy_l = abr[("thyroid_cancer", "1995-1999")], abr[("thyroid_cancer", "2020-2024")]
+check("thyroid log2 ABR first +3.05", close(float(thy_f["log2_abr"]), 3.05, 0.01))
+check("thyroid log2 ABR last +3.24", close(float(thy_l["log2_abr"]), 3.24, 0.01))
+check("hearing DALY share first 69.2%",
+      close(100 * float(hl_f["burden_share_pool"]), 69.2, 0.15))
+check("hearing pub share (burden pool) first 33.5%",
+      close(100 * float(hl_f["pub_share_burden_pool"]), 33.5, 0.15))
+# geography: trajectory landmarks frozen in centroid FREEZE_v2
+check("oral distance 2000-2004 = 1,048",
+      round(float(dist[("oral_cancer", "2000-2004")]["distance_km"])) == 1048)
+check("oral distance 2005-2009 = 1,369",
+      round(float(dist[("oral_cancer", "2005-2009")]["distance_km"])) == 1369)
+check("oral distance 2010-2014 = 692",
+      round(float(dist[("oral_cancer", "2010-2014")]["distance_km"])) == 692)
+check("oral distance 2015-2019 = 1,292",
+      round(float(dist[("oral_cancer", "2015-2019")]["distance_km"])) == 1292)
+check("NPC distance 2015-2019 = 978",
+      round(float(dist[("nasopharynx_cancer", "2015-2019")]["distance_km"])) == 978)
+check("thyroid distance 2015-2019 = 1,674",
+      round(float(dist[("thyroid_cancer", "2015-2019")]["distance_km"])) == 1674)
+for a in ("otitis_media", "hearing_loss", "larynx_cancer"):
+    dv = [float(dist[(a, p)]["distance_km"]) for p in PERIODS]
+    check(f"distance monotone fall {a}",
+          all(dv[i] > dv[i + 1] for i in range(len(dv) - 1)))
+dlast = [round(float(dist[(a, "2020-2024")]["distance_km"])) for a in BURDEN]
+check("last-period distance min 1,102", min(dlast) == 1102)
+check("last-period distance max 5,242", max(dlast) == 5242)
+for a in BURDEN:
+    d0 = float(dist[(a, "1995-1999")]["distance_km"])
+    d1 = float(dist[(a, "2020-2024")]["distance_km"])
+    chg = 100 * (d1 - d0) / d0
+    check(f"distance change {a} within −80%..−39%", -81.0 <= chg <= -38.0)
+chn_first = (float(lmic["1995-1999"]["lmic_share_all"])
+             - float(lmic["1995-1999"]["lmic_share_excl_china"]))
+chn_last = (float(lmic["2020-2024"]["lmic_share_all"])
+            - float(lmic["2020-2024"]["lmic_share_excl_china"]))
+check("China share of parsed records first 2.5%", close(chn_first, 2.5, 0.1))
+check("China share of parsed records last 21.9%", close(chn_last, 21.9, 0.1))
+# typology: S/B/A signal values as frozen in the manuscript §3.4 record
+EXP_SIG = {"otitis_media": (-65.5, -33.0, -1.04), "hearing_loss": (-17.1, 5.0, -0.42),
+           "larynx_cancer": (-56.9, -18.1, -1.01), "oral_cancer": (97.7, 8.6, 0.78),
+           "nasopharynx_cancer": (61.7, -38.3, 1.31),
+           "other_pharynx_cancer": (36.6, 19.5, 0.11), "thyroid_cancer": (26.2, 4.8, 0.19)}
+for a, (sv, bv, av) in EXP_SIG.items():
+    check(f"signal S {a} = {sv}", close(float(signals[a]["S_rel_pct"]), sv, 0.15))
+    check(f"signal B {a} = {bv}", close(float(signals[a]["B_rel_pct"]), bv, 0.15))
+    check(f"signal A {a} = {av}", close(float(signals[a]["A_delta"]), av, 0.015))
+for a in ("nasopharynx_cancer", "oral_cancer"):
+    t = typology[a]
+    check(f"typology robust {a}",
+          t["type_low"] == t["type_main"] == t["type_high"]
+          and t["robust_across_thresholds"] == "1")
+check("larynx low set = resolution_dilution",
+      typology["larynx_cancer"]["type_low"] == "resolution_dilution")
+check("other pharynx low set = burden_tracking",
+      typology["other_pharynx_cancer"]["type_low"] == "burden_tracking")
+check("thyroid high set = constant",
+      typology["thyroid_cancer"]["type_high"] == "constant")
+check("otitis high set = unclassified",
+      typology["otitis_media"]["type_high"] == "unclassified")
+check("hearing low set = unclassified",
+      typology["hearing_loss"]["type_low"] == "unclassified")
+EXP_ATT_TYPE = {"crs_polyps": "share_falling", "allergic_rhinitis": "share_falling",
+                "osa": "share_rising", "tinnitus": "share_stable",
+                "vertigo": "share_stable", "cholesteatoma": "share_falling",
+                "cochlear_implant": "share_stable"}
+for a, t in EXP_ATT_TYPE.items():
+    check(f"attention label {a} = {t}", typology[a]["type_main"] == t)
+daly_chg = [float(signals[a]["daly_annual_pct_change"]) for a in BURDEN]
+check("absolute DALY annualised change min +3.9%", close(min(daly_chg), 3.9, 0.15))
+check("absolute DALY annualised change max +101.3%", close(max(daly_chg), 101.3, 0.15))
+
 # ---------------------------------------------------------------- SVG charts
 def spark(values, w=300, h=92, color="#1d4ed8", zero=False, vfmt="{:.1f}",
           labels=True):
@@ -270,6 +358,14 @@ footer.site{border-top:1px solid #d7dee9;background:#f8fafc;color:#475569;font-s
 footer.site .wrap{max-width:1060px;margin:0 auto;padding:14px 18px}
 a{color:#16407c}code{background:#eef3fa;padding:0 4px;border-radius:3px}
 .kv{font-size:14px}.kv b{color:#0f2a52}
+.crumbs{font-size:13px;color:#475569;margin:0 0 4px}
+.prevnext{display:flex;justify-content:space-between;gap:10px;margin:24px 0 4px;font-size:14px;border-top:1px solid #d7dee9;padding-top:10px}
+.acards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:14px 0}
+.acard{border:1px solid #d7dee9;border-radius:6px;padding:11px 13px;background:#fff}
+.acard .nm{font-weight:700;font-size:15px}.acard .nm a{color:#0f2a52;text-decoration:none}.acard .nm a:hover{text-decoration:underline}
+.acard .hl{font-size:13.5px;margin-top:4px;color:#1f2937}.acard .tier{margin-top:7px}
+tr.mute td{color:#6b7280;background:#f3f4f6}
+.verdict{font-weight:700;color:#0f2a52}
 @media (max-width:640px){table{font-size:12.5px}th,td{padding:4px 5px}header.site h1{font-size:17px}}
 """
 
@@ -290,13 +386,13 @@ def page(title, body, depth=0):
 <p>Research attention vs disease burden in otolaryngology, 1995–2024 — a preregistered dynamic census</p>
 </div></header>
 <nav class="main"><div class="wrap">
-<a href="{pre}index.html">Home</a><a href="{pre}areas.html">Areas</a><a href="{pre}methods.html">Methods</a><a href="{pre}downloads.html">Downloads</a>
+<a href="{pre}index.html">Home</a><a href="{pre}areas.html">Areas</a><a href="{pre}findings.html">Findings</a><a href="{pre}geography.html">Geography</a><a href="{pre}typology.html">Typology</a><a href="{pre}methods.html">Methods</a><a href="{pre}downloads.html">Downloads</a><a href="{pre}about.html">About</a>
 </div></nav>
 <main>
 {body}
 </main>
 <footer class="site"><div class="wrap">
-Canonical site: <a href="{CANONICAL}/">{CANONICAL}</a> · Source code: <a href="{REPO_URL}">GitHub repository</a> ·
+Canonical site: <a href="{CANONICAL}/">{CANONICAL}</a> ·
 Frozen data &amp; code archive: <a href="{ZENODO_URL}">Zenodo, DOI {ZENODO_DOI}</a> ·
 Preregistration: <a href="{OSF_URL}">OSF, DOI {OSF_DOI}</a><br>
 This is a static site generated from frozen result files. It measures the configuration of research
@@ -316,6 +412,30 @@ def signed_pct(x):
 
 
 # ---------------------------------------------------------------- home page
+def area_cards():
+    cards = []
+    for a in AREAS:
+        tier_burden = a in BURDEN
+        s_first = pct(share[(a, "1995-1999")])
+        s_last = pct(share[(a, "2020-2024")])
+        mark = " *" if a == "crs_polyps" else ""
+        if tier_burden:
+            abr_last = float(abr[(a, "2020-2024")]["abr"])
+            hl = (f"ABR {abr_last:.2f} in 2020–24 · Pool share "
+                  f"{s_first} → {s_last}")
+            tier = "Burden tier"
+        else:
+            hl = (f"Pool share {s_first} → {s_last} · "
+                  f"{TYPE_LABEL[typology[a]['type_main']]}")
+            tier = "Attention tier"
+        cards.append(
+            f'<div class="acard"><div class="nm">'
+            f'<a href="areas/{a}.html">{escape(NAMES[a])}{mark}</a></div>'
+            f'<div class="hl">{hl}</div>'
+            f'<div class="tier"><span class="tag">{tier}</span></div></div>')
+    return "\n".join(cards)
+
+
 def home():
     hl_daly = 100 * float(hl_l["burden_share_pool"])
     hl_pub = 100 * float(hl_l["pub_share_burden_pool"])
@@ -345,6 +465,15 @@ typology. The design was registered before the record-level data were pulled
 excluding China {pct(float(lmic['1995-1999']['lmic_share_excl_china']))} → {pct(float(lmic['2020-2024']['lmic_share_excl_china']))}</div></div>
 </div>
 
+<h3>Explore the 14 areas</h3>
+<div class="acards">
+{area_cards()}
+</div>
+<p class="small">* CRS/polyps: the share decline reverses (+251.0%) under a backup
+query built only from modern post-consensus terminology and is read as terminology
+migration, not as a fall in research volume (see the
+<a href="areas/crs_polyps.html">CRS area page</a> and <a href="methods.html">Methods</a>).</p>
+
 <h3>Headline findings</h3>
 <ul>
 <li><b>Shares rotated towards oncology.</b> The five head-and-neck cancers jointly rose
@@ -369,7 +498,6 @@ thyroid cancer are reported as <i>unclassified</i>, not forced into a type.</li>
 <h3>How to cite and reuse</h3>
 <p class="kv">Preregistration: <a href="{OSF_URL}">doi.org/{OSF_DOI}</a> ·
 Frozen data and code: <a href="{ZENODO_URL}">Zenodo, DOI {ZENODO_DOI}</a> ·
-Production code: <a href="{REPO_URL}">GitHub repository</a> ·
 Canonical site: <a href="{CANONICAL}/">burden.erbihou.org</a></p>
 <p>A manuscript reporting this census is in preparation for <i>Scientometrics</i>
 (it has not been published). The frozen tables on the
@@ -435,7 +563,9 @@ def area_page(a):
     s = signals[a]
     t = typology[a]
     share_vals = [share[(a, p)] for p in PERIODS]
-    parts = [f"<h2>{escape(NAMES[a])}</h2>"]
+    parts = [f'<p class="crumbs"><a href="../index.html">Home</a> › '
+             f'<a href="../areas.html">Areas</a> › {escape(NAMES[a])}</p>',
+             f"<h2>{escape(NAMES[a])}</h2>"]
     if tier_burden:
         parts.append(f'<p class="kv">Tier: <b>Burden tier</b> · Matched burden cause: '
                      f'<b>{escape(GBD_CAUSE[a])}</b>, GBD 2023 (DALYs primary).</p>')
@@ -558,6 +688,13 @@ def area_page(a):
                      f'{signed_pct(float(tt["primary_rel_change_pct"]))}). The two '
                      f'queries {"agree" if tt["directions_agree"] == "yes" else "do not agree"} '
                      'on direction within a ±5% band.</p>')
+    idx = AREAS.index(a)
+    prev_link = (f'<a href="{AREAS[idx - 1]}.html">← Previous: '
+                 f'{escape(NAMES[AREAS[idx - 1]])}</a>' if idx > 0 else "<span></span>")
+    next_link = (f'<a href="{AREAS[idx + 1]}.html">Next: '
+                 f'{escape(NAMES[AREAS[idx + 1]])} →</a>'
+                 if idx < len(AREAS) - 1 else "<span></span>")
+    parts.append(f'<div class="prevnext">{prev_link}{next_link}</div>')
     parts.append('<p class="small"><a href="../areas.html">← All areas</a> · '
                  'Full frozen tables: <a href="../downloads.html">Downloads</a></p>')
     return page(NAMES[a], "\n".join(parts), depth=1)
@@ -707,6 +844,312 @@ figure was generated by a language model.</p>
     return page("Methods", body)
 
 
+# ---------------------------------------------------------------- findings
+def findings_page():
+    hl_daly = 100 * float(hl_l["burden_share_pool"])
+    hl_pub = 100 * float(hl_l["pub_share_burden_pool"])
+    body = f"""
+<h2>Findings</h2>
+<p>The census's six headline findings, in the order of the measurement layers,
+followed by the scorecard for the three expectations recorded in the
+preregistration. Every quantity describes the configuration of published
+research relative to modelled burden estimates; none ranks diseases by clinical
+importance.</p>
+
+<h3>1. The pool grew fivefold and rotated towards oncology</h3>
+<p>The 14-area pool grew from {fnum(pool['1995-1999'])} publications in 1995–99
+to {fnum(pool['2020-2024'])} in 2020–24. The five head-and-neck cancers jointly
+rose from {pct(fc_first)} to {pct(fc_last)} of the pool, driven by
+nasopharyngeal cancer (8.3% → 13.4%), oral cancer (4.5% → 8.9%) and thyroid
+cancer (10.1% → 12.7%). Laryngeal cancer moved against its own group
+(3.2% → 1.4%): the rotation is within oncology as much as towards it.</p>
+
+<h3>2. Otitis media shrank in share, not in output</h3>
+<p>Its pool share fell from 8.4% to 2.9% while its five-year output rose from
+2,229 to 3,706 publications — a textbook denominator effect, in which a
+still-growing area is diluted by faster-growing neighbours.</p>
+
+<h3>3. Hearing loss is the central level finding</h3>
+<p>In 2020–24 hearing loss carried {pct(hl_daly)} of the seven-cause DALY pool
+against {pct(hl_pub)} of the same pool's publications — roughly one-third of
+the publication share its burden share would imply under proportionality. Its
+log2 ABR deepened from −1.05 to −1.47 (ABR 0.48 → 0.36), the only cause below
+parity in the first period that ended further below it. Laryngeal cancer
+joined it from above (−0.18 → −1.18). At the other end, thyroid cancer held
+the pool's largest excess throughout (+3.05 → +3.24; ABR ≈ 9.45 in the last
+period).</p>
+
+<h3>4. Geography converged in direction, not in level</h3>
+<p>The distance between the DALY-weighted burden centroid and the
+first-author research centroid fell for all seven burden-tier causes
+(−39% to −80% between the first and last periods). Last-period distances
+remain large in absolute terms — 1,102 to 5,242 km: the research centre of
+every cause still sits on a different part of the map from its burden centre.
+The paths are not all smooth: nasopharyngeal cancer's distance fell to 978 km
+in 2015–19 and then rebounded to 2,467 km. Detail on the
+<a href="geography.html">Geography page</a>.</p>
+
+<h3>5. The authorship base broadened</h3>
+<p>The low- and middle-income country (LMIC) share of first authors across
+the pooled areas rose from 7.9% in 1995–99 to 39.8% in 2020–24. China
+accounts for much of the rise (2.5% → 21.9% of all parsed records) but not
+all of it: excluding China, the LMIC share of all parsed records still rose
+from 5.4% to 17.9%.</p>
+
+<h3>6. Typology: two robust types, one stable misalignment, three unclassified</h3>
+<p>Under the rule-based decoupling typology, otitis media is
+resolution-dilution (a relative share dilution only — annualised absolute
+DALYs rose for all seven causes). Nasopharyngeal and oral cancer are
+technology-ignited, the only two assignments unchanged under all three
+threshold sets. Hearing loss is typed <b>constant</b> on dynamics only, and
+must be read together with its level — ABR 0.36 in 2020–24, the pool's
+deepest deficit: a stable misalignment, not an absence of one. Laryngeal,
+other pharyngeal and thyroid cancer match no rule under the main thresholds
+and are reported as <i>unclassified</i>, not forced into a type. Detail on
+the <a href="typology.html">Typology page</a>.</p>
+
+<div class="caveat"><b>CRS/polyps.</b> {CRS_CAVEAT} The CRS share decline is
+therefore not counted among the headline findings above.</div>
+
+<h3>The preregistered expectations, scored</h3>
+<table>
+<tr><th class="l">Expectation (as registered)</th><th class="l">Verdict</th><th class="l">What the data show</th></tr>
+<tr><td class="l">(1) Classic infectious diseases will fall in publication share but not in absolute output.</td>
+<td class="l"><span class="verdict">Fully matched</span></td>
+<td class="l">Otitis media is the textbook case: share 8.4% → 2.9%; output 2,229 → 3,706 publications per period.</td></tr>
+<tr><td class="l">(2) Burden is shifting towards lower-income regions while research geography does not follow.</td>
+<td class="l"><span class="verdict">Largely not supported</span></td>
+<td class="l">Research geography did follow: centroid distances contracted for all seven causes under all three estimators, and the LMIC first-author share rose 7.9% → 39.8%. The expectation survives only in its level form — the remaining distances are still 1,102–5,242 km.</td></tr>
+<tr><td class="l">(3) Share gains will concentrate in diseases marked by treatment or technology shifts.</td>
+<td class="l"><span class="verdict">Half matched</span></td>
+<td class="l">The head-and-neck cancers fit the expectation. Obstructive sleep apnoea, the clearest technology-associated area, rose once and then plateaued, its yearly share sitting at roughly 12–13% in every year since 2005. The CRS point originally attached to this expectation is now read as terminology migration (caveat above), not as evidence about the biologics era either way.</td></tr>
+</table>
+<p class="small">A scorecard of one full, one largely failed and one half is
+what a preregistered descriptive study should expect to publish; the failed
+expectation (2) is the more informative result, because it rules out the
+simplest version of the "research ignores the shifting burden" narrative for
+this specialty.</p>
+"""
+    return page("Findings", body)
+
+
+# ---------------------------------------------------------------- geography
+def geography_page():
+    rows = []
+    for a in BURDEN:
+        dv = [float(dist[(a, p)]["distance_km"]) for p in PERIODS]
+        chg = 100 * (dv[-1] - dv[0]) / dv[0]
+        cells = "".join(f"<td>{km(v)}</td>" for v in dv)
+        rows.append(f'<tr><td class="l">{escape(NAMES[a])}</td>{cells}'
+                    f'<td>{signed_pct(chg)}</td></tr>')
+    lmic_rows = []
+    for p in PERIODS:
+        tot = float(lmic[p]["lmic_share_all"])
+        exc = float(lmic[p]["lmic_share_excl_china"])
+        lmic_rows.append(f'<tr><td class="l">{PLAB[p]}</td><td>{pct(tot)}</td>'
+                         f'<td>{pct(tot - exc)}</td><td>{pct(exc)}</td></tr>')
+    body = f"""
+<h2>Geography: burden and research centroids</h2>
+<p>For each burden-tier cause and period, two centres are computed over the
+same set of country centres. The <b>burden centroid</b> is weighted by GBD
+2023 DALY numbers — it sits where the cause's burden sits. The <b>research
+centroid</b> is weighted by parsed first-author records — it sits where the
+cause's publishing authors are. Both use the <b>arithmetic mean centre</b>
+(the weighted arithmetic mean of country-centre latitudes combined with the
+circular mean of longitudes; centroid freeze v2), and the distance between
+them is the haversine great-circle distance. The estimator's diagnostic
+history, and the side-by-side comparison with the two estimators it
+replaced, are documented on the <a href="methods.html">Methods page</a> and
+in the frozen estimator-sensitivity table on the
+<a href="downloads.html">Downloads page</a>.</p>
+
+<h3>Double-centroid distance (km)</h3>
+<table>
+<tr><th class="l">Cause</th>{''.join(f'<th>{PLAB[p]}</th>' for p in PERIODS)}<th>Change, first → last</th></tr>
+{''.join(rows)}
+</table>
+<p>The distance fell for all seven causes (−39% to −80%). Three paths —
+otitis media, hearing loss and laryngeal cancer — fall monotonically. The
+others do not: oral cancer's path is a sawtooth (1,048 / 1,369 / 692 /
+1,292 km across the middle periods); nasopharyngeal cancer fell to 978 km
+in 2015–19 and rebounded to 2,467 km in the last period, the largest
+single-step reversal in this layer; thyroid cancer rose slightly in the
+final step (1,674 → 1,756 km, +82 km) after a steep fall. Convergence in
+direction is not convergence in level: last-period distances remain
+1,102–5,242 km, so the research centre of every cause still sits on a
+different part of the map from its burden centre.</p>
+
+<h3>Who publishes: LMIC first-author share</h3>
+<p>Pooled across all 14 areas, the share of parsed first-author records
+whose author is affiliated in a low- or middle-income country (the World
+Bank low-, lower-middle- and upper-middle-income groups combined; the
+classification snapshot is held fixed across all periods, a disclosed
+simplification):</p>
+<table>
+<tr><th class="l">Period</th><th>LMIC share of parsed records</th><th>of which China</th><th>LMIC excluding China</th></tr>
+{''.join(lmic_rows)}
+</table>
+<p>All three shares use all parsed records as the denominator, so the
+excluding-China column is the frozen basis reported throughout this site
+(it is not renormalised to non-China records). China alone accounts for
+much of the pooled rise (2.5% → 21.9% of all parsed records), but the
+excluding-China share still more than tripled (5.4% → 17.9%). Per-area
+first-author geography — including each burden cause's share of authors in
+its ten highest-DALY countries — is on the individual
+<a href="areas.html">area pages</a>.</p>
+"""
+    return page("Geography", body)
+
+
+# ---------------------------------------------------------------- typology
+def typology_page():
+    rows = []
+    for a in BURDEN:
+        s, t = signals[a], typology[a]
+        mute = ' class="mute"' if t["type_main"] == "unclassified" else ""
+        rows.append(
+            f'<tr{mute}><td class="l">{escape(NAMES[a])}</td>'
+            f'<td>{signed_pct(float(s["S_rel_pct"]))}</td>'
+            f'<td>{signed_pct(float(s["B_rel_pct"]))}</td>'
+            f'<td>{float(s["A_delta"]):+.2f}</td>'
+            f'<td class="l"><b>{escape(TYPE_LABEL[t["type_main"]])}</b></td>'
+            f'<td class="l">{escape(TYPE_LABEL[t["type_low"]])}</td>'
+            f'<td class="l">{escape(TYPE_LABEL[t["type_high"]])}</td></tr>')
+    arows = []
+    for a in ATTENTION:
+        s, t = signals[a], typology[a]
+        mark = " *" if a == "crs_polyps" else ""
+        arows.append(
+            f'<tr><td class="l">{escape(NAMES[a])}{mark}</td>'
+            f'<td>{pct(share[(a, "1995-1999")])} → {pct(share[(a, "2020-2024")])}</td>'
+            f'<td>{signed_pct(float(s["S_rel_pct"]))}</td>'
+            f'<td class="l"><b>{escape(TYPE_LABEL[t["type_main"]])}</b></td>'
+            f'<td class="l">{escape(TYPE_LABEL[t["type_low"]])}</td>'
+            f'<td class="l">{escape(TYPE_LABEL[t["type_high"]])}</td></tr>')
+    body = f"""
+<h2>Decoupling typology</h2>
+<p>Each burden-tier cause is classified from three signals comparing the
+first period (1995–99) with the last (2020–24): <b>S</b>, the relative
+change in its share of the 14-area publication pool; <b>B</b>, the relative
+change in its share of the seven-cause DALY pool; and <b>A</b>, the change
+in log2 ABR. The signed protocol fixed the type names, definitions and the
+three-signal framework; anything matching no rule is reported as
+<b>unclassified, never forced</b>.</p>
+
+<h3>Burden tier (main thresholds ±25% for S and B, ±0.5 for A)</h3>
+<table>
+<tr><th class="l">Cause</th><th>S</th><th>B</th><th>A</th><th class="l">Main type</th><th class="l">Low set (±15% / ±0.3)</th><th class="l">High set (±35% / ±0.7)</th></tr>
+{''.join(rows)}
+</table>
+<p>Sensitivity behaviour: nasopharyngeal and oral cancer are
+technology-ignited under all three threshold sets — the only two fully
+robust assignments. Otitis media is resolution-dilution under the main and
+low sets and unclassified under the high set. Hearing loss is constant
+under the main and high sets and unclassified under the low set; its type
+describes dynamics only and must be read together with its level — ABR
+0.36 in 2020–24 (log2 ABR −1.47), the pool's deepest deficit. Of the three
+causes unclassified under the main thresholds, laryngeal cancer becomes
+resolution-dilution under the low set, other pharyngeal cancer becomes
+burden-tracking under the low set, and thyroid cancer becomes constant
+under the high set. Each sits near a rule boundary; the classification
+reports that rather than resolving it by fiat.</p>
+
+<h3>Attention tier: share-dynamics labels only</h3>
+<p>Attention-tier areas have no GBD-matched burden cause, so they receive
+no type — only a label for the direction of their pool-share change under
+the same bands.</p>
+<table>
+<tr><th class="l">Area</th><th>Share 1995–99 → 2020–24</th><th>S</th><th class="l">Label (main band)</th><th class="l">Low band</th><th class="l">High band</th></tr>
+{''.join(arows)}
+</table>
+<div class="caveat">* CRS/polyps: {CRS_CAVEAT}</div>
+
+<h3>How to read this page</h3>
+<p><b>B is a share, not a level.</b> A falling B means relative dilution
+inside the seven-cause pool. Annualised absolute DALYs in fact rose for
+all seven burden-tier causes between the first and last periods (+3.9% to
++101.3%), so "resolution" in the resolution-dilution label means relative
+share dilution only; nothing on this page claims any burden fell in
+absolute terms.</p>
+<p><b>Thresholds.</b> The signed protocol did not fix numeric thresholds.
+The thresholds used here — main ±25% for S and B and ±0.5 for A, with the
+±15%/±0.3 and ±35%/±0.7 sensitivity sets shown for every assignment — were
+operationalised at the typology stage, before the classification was run.
+The typology is therefore a descriptive classification under pre-stated
+type definitions, not preregistered inference.</p>
+<p><b>Type names are shape labels, not mechanism claims.</b>
+"Technology-ignited" names a configuration — publication share rising
+while burden share is flat or falling, with ABR rising — and asserts
+nothing about what caused it.</p>
+"""
+    return page("Typology", body)
+
+
+# ---------------------------------------------------------------- about
+def about_page():
+    body = f"""
+<h2>About this atlas</h2>
+<p>The ENT Burden Atlas is the open resource layer of a preregistered census
+of research attention versus disease burden in otolaryngology, 1995–2024.
+It exposes the census's frozen results — publication shares,
+attention–burden ratios, burden–research centroid distances and the
+decoupling typology — by area, period and country, for reuse and for
+replication of the design in other specialties: the pipeline is
+specialty-agnostic in structure (a frozen disease pool, a public
+bibliographic source, a public burden source, and the four measurement
+layers above).</p>
+
+<h3>Provenance</h3>
+<p class="kv">
+<b>Preregistration:</b> Open Science Framework project 42ytu; registration
+DOI <a href="{OSF_URL}">{OSF_DOI}</a>. The protocol was registered before
+record-level production began; Amendment v1.1, substituting GBD 2023 for
+the GBD 2021 release that the Institute for Health Metrics and Evaluation
+had retired, is filed with the registration.<br>
+<b>Frozen archive:</b> Zenodo, DOI <a href="{ZENODO_URL}">{ZENODO_DOI}</a> —
+all frozen tables, the record-level country-parse table, the GBD input
+extracts, all production and figure code, and the project documents.<br>
+<b>Canonical site:</b> <a href="{CANONICAL}/">{CANONICAL}</a><br>
+<b>Frozen as of:</b> 12 November 2026. This is a static site generated from
+the frozen result files; it is not updated as new data appear.</p>
+
+<h3>Authors</h3>
+<p>Peiliang Lei (corresponding author), Wenrong Dong, Jingyi Tan,
+Xiaoying Yang<br>
+Department of Otolaryngology, Third Hospital of Shijiazhuang, Hebei,
+China.</p>
+
+<h3>Data sources</h3>
+<ul>
+<li><b>Publications:</b> Europe PMC — frozen title/abstract queries, counts
+for 1995–2024, and record-level retrieval for the geographic layer.</li>
+<li><b>Burden:</b> Global Burden of Disease 2023 estimates (Institute for
+Health Metrics and Evaluation) — DALYs primary, prevalence as the
+sensitivity calibre — for the seven matched causes, 1995–2023.</li>
+<li><b>Country classification:</b> World Bank income classification
+(snapshot frozen 12 November 2026 and held fixed across all periods);
+country centres from the frozen snapshot of the mledoze/countries
+dataset.</li>
+</ul>
+
+<h3>How to cite</h3>
+<div class="note">
+Lei P, Dong W, Tan J, Yang X. <i>Research attention and disease burden in
+otolaryngology, 1995–2024: a preregistered dynamic census of publication
+shares, attention–burden ratios and research geography.</i> Manuscript in
+preparation for <i>Scientometrics</i>.<br>
+Preregistration: <a href="{OSF_URL}">doi.org/{OSF_DOI}</a> ·
+Frozen data and code: <a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a> ·
+Atlas: <a href="{CANONICAL}/">burden.erbihou.org</a>
+</div>
+<p class="small">Scope boundary: every quantity in this atlas describes the
+configuration of published research relative to modelled burden estimates.
+Nothing here ranks diseases by clinical importance or states how much
+research any disease should receive.</p>
+"""
+    return page("About", body)
+
+
 # ---------------------------------------------------------------- downloads
 DOWNLOAD_FILES = [
     ("data_l1/l1_counts_by_year.csv", "L1 publication counts by year (primary queries)"),
@@ -751,8 +1194,9 @@ the record-level country-parse table for 392,456 records, the GBD input
 extracts, reference tables, all production and figure code, and the project
 documents): <a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a>.</li>
 <li><b>Production code</b> — search formulations, GBD mapping, parsing and
-indicator code, figure scripts and this site's generator:
-<a href="{REPO_URL}">github.com/yuye8848/ent-burden-atlas</a>.</li>
+indicator code, figure scripts and this site's generator are archived together
+with the frozen data in the Zenodo record above:
+<a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a>.</li>
 <li><b>Preregistration</b> — protocol and Amendment v1.1 (GBD 2023):
 <a href="{OSF_URL}">doi.org/{OSF_DOI}</a>.</li>
 </ul>
@@ -777,9 +1221,46 @@ def build():
     with open(os.path.join(OUT, ".nojekyll"), "w", encoding="utf-8") as fh:
         fh.write("")
     pages = {"index.html": home(), "areas.html": areas_page(),
-             "methods.html": methods_page(), "downloads.html": downloads_page()}
+             "findings.html": findings_page(), "geography.html": geography_page(),
+             "typology.html": typology_page(), "methods.html": methods_page(),
+             "downloads.html": downloads_page(), "about.html": about_page()}
     for a in AREAS:
         pages[f"areas/{a}.html"] = area_page(a)
+    # structural assertions on the assembled site
+    check("total pages = 22", len(pages) == 22)
+    nav_targets = ["index.html", "areas.html", "findings.html", "geography.html",
+                   "typology.html", "methods.html", "downloads.html", "about.html"]
+    for rel, html in pages.items():
+        pre = "../" if rel.startswith("areas/") else ""
+        check(f"nav complete on {rel}",
+              all(f'href="{pre}{t}"' in html for t in nav_targets))
+        check(f"no github URL on {rel}", "github.com/yuye8848" not in html)
+    check("CRS asterisk card on home",
+          'crs_polyps.html">Chronic rhinosinusitis / nasal polyps (CRS) *</a>'
+          in pages["index.html"])
+    check("CRS caveat note under home grid",
+          "the share decline reverses (+251.0%)" in pages["index.html"])
+    check("typology page mutes unclassified rows",
+          pages["typology.html"].count('class="mute"') == 3)
+    check("typology page carries CRS caveat",
+          "terminology migration" in pages["typology.html"])
+    check("findings page pairs hearing constant with ABR 0.36",
+          "constant</b> on dynamics only" in pages["findings.html"]
+          and "ABR 0.36 in 2020–24" in pages["findings.html"])
+    check("findings scorecard verdicts present",
+          all(v in pages["findings.html"] for v in
+              ("Fully matched", "Largely not supported", "Half matched")))
+    check("about page carries both DOIs",
+          OSF_DOI in pages["about.html"] and ZENODO_DOI in pages["about.html"])
+    for a in AREAS:
+        html = pages[f"areas/{a}.html"]
+        check(f"breadcrumb on {a}",
+              "Home</a> ›" in html and f"› {escape(NAMES[a])}</p>" in html)
+    first, last = pages["areas/otitis_media.html"], pages["areas/cochlear_implant.html"]
+    check("first area page has Next only",
+          "Next:" in first and "Previous:" not in first)
+    check("last area page has Previous only",
+          "Previous:" in last and "Next:" not in last)
     for rel, html in pages.items():
         with open(os.path.join(OUT, rel), "w", encoding="utf-8") as fh:
             fh.write(html)

@@ -22,4 +22,12 @@ footer.site{border-top:1px solid #d7dee9;background:#f8fafc;color:#475569;font-s
 footer.site .wrap{max-width:1060px;margin:0 auto;padding:14px 18px}
 a{color:#16407c}code{background:#eef3fa;padding:0 4px;border-radius:3px}
 .kv{font-size:14px}.kv b{color:#0f2a52}
+.crumbs{font-size:13px;color:#475569;margin:0 0 4px}
+.prevnext{display:flex;justify-content:space-between;gap:10px;margin:24px 0 4px;font-size:14px;border-top:1px solid #d7dee9;padding-top:10px}
+.acards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:14px 0}
+.acard{border:1px solid #d7dee9;border-radius:6px;padding:11px 13px;background:#fff}
+.acard .nm{font-weight:700;font-size:15px}.acard .nm a{color:#0f2a52;text-decoration:none}.acard .nm a:hover{text-decoration:underline}
+.acard .hl{font-size:13.5px;margin-top:4px;color:#1f2937}.acard .tier{margin-top:7px}
+tr.mute td{color:#6b7280;background:#f3f4f6}
+.verdict{font-weight:700;color:#0f2a52}
 @media (max-width:640px){table{font-size:12.5px}th,td{padding:4px 5px}header.site h1{font-size:17px}}
