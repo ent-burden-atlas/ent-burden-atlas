@@ -1,0 +1,15 @@
+area,tier,pub_n_first,pub_n_last,pub_share14_first,pub_share14_last,S_rel_pct,S_dir_main,B_dir_main,A_dir_main,daly_share_first,daly_share_last,B_rel_pct,log2abr_first,log2abr_last,A_delta,daly_annual_pct_change
+allergic_rhinitis,attention,1625,5845,0.061219,0.045622,-25.48,down,,,,,,,,,
+cholesteatoma,attention,530,1179,0.019967,0.009203,-53.91,down,,,,,,,,,
+cochlear_implant,attention,1199,5650,0.045170,0.044100,-2.37,stable,,,,,,,,,
+crs_polyps,attention,2266,8027,0.085368,0.062654,-26.61,down,,,,,,,,,
+hearing_loss,burden,5411,21659,0.203850,0.169056,-17.07,stable,stable,stable,0.692458,0.727098,5.00,-1.047365,-1.469316,-0.421951,76.85
+larynx_cancer,burden,848,1763,0.031947,0.013761,-56.93,down,stable,down,0.059338,0.048594,-18.11,-0.176427,-1.184869,-1.008442,37.93
+nasopharynx_cancer,burden,2202,17180,0.082957,0.134096,61.65,up,down,up,0.056815,0.035044,-38.32,1.262948,2.571354,1.308406,3.89
+oral_cancer,burden,1196,11412,0.045057,0.089075,97.69,up,stable,up,0.081025,0.088010,8.62,-0.129761,0.652680,0.782441,82.94
+osa,attention,2627,15953,0.098968,0.124519,25.82,up,,,,,,,,,
+other_pharynx_cancer,burden,1589,10473,0.059863,0.081746,36.55,up,stable,stable,0.037626,0.044977,19.54,1.386777,1.497290,0.110513,101.33
+otitis_media,burden,2229,3706,0.083974,0.028927,-65.55,down,down,down,0.052800,0.035386,-32.98,1.386246,0.344559,-1.041687,12.87
+thyroid_cancer,burden,2675,16288,0.100776,0.127134,26.15,up,stable,stable,0.019938,0.020892,4.78,3.054410,3.240633,0.186223,76.48
+tinnitus,attention,921,4535,0.034697,0.035397,2.02,stable,,,,,,,,,
+vertigo,attention,1226,4447,0.046187,0.034710,-24.85,stable,,,,,,,,,

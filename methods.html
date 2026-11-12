@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Methods · ENT Burden Atlas</title>
+<link rel="stylesheet" href="assets/style.css?v=1">
+</head>
+<body>
+<header class="site"><div class="wrap">
+<h1>ENT Burden Atlas</h1>
+<p>Research attention vs disease burden in otolaryngology, 1995–2024 — a preregistered dynamic census</p>
+</div></header>
+<nav class="main"><div class="wrap">
+<a href="index.html">Home</a><a href="areas.html">Areas</a><a href="methods.html">Methods</a><a href="downloads.html">Downloads</a>
+</div></nav>
+<main>
+
+<h2>Methods</h2>
+
+<h3>Design and preregistration</h3>
+<p>This is a descriptive, denominator-type census. Two denominators are fixed
+first — a 14-area publication pool and, inside it, a seven-cause burden pool —
+and every quantity is a composition within them. The protocol, disease pool and
+analysis layers were fixed in a signed work report and preregistered on the Open
+Science Framework before record-level production began
+(<a href="https://doi.org/10.17605/OSF.IO/NUC4B">registration DOI 10.17605/OSF.IO/NUC4B</a>). One amendment is documented:
+the Institute for Health Metrics and Evaluation retired GBD 2021, so Amendment
+v1.1 substituted <b>GBD 2023</b> (burden years 1995–2023). The study measures the
+configuration of research allocation only; it makes no clinical-value judgement
+and no claim about how much research any disease deserves.</p>
+
+<h3>Publication census (L1)</h3>
+<p>Publications were counted in Europe PMC under one frozen title/abstract query
+per area, per year, 1995–2024 (420 area–year cells), and aggregated into six
+five-year periods. The L1 counts use the Europe PMC hitCount basis
+(392,458 records). Record-level retrieval for the geographic layer delivered
+392,456 records; two parts each contained one "phantom" record —
+counted in the hitCount but never delivered (D-1: oral cancer 2010–2014,
+4,806 vs 4,805 retrievable; D-2: obstructive sleep apnoea 2015–2019,
+11,604 vs 11,603). Each was accepted only after three scripted checks passed
+(unique identifiers; stable hitCount on re-query; identical identifier sets from
+an independent second retrieval channel) and both are itemised in a frozen
+discrepancy record shipped with the archive.</p>
+
+<h3>Country parsing (L3 production)</h3>
+<p>A first-author affiliation was present for 356,332 records
+(90.80%). Affiliation strings were parsed to a
+country or region by a four-layer dictionary procedure (institution and city
+dictionaries with disambiguation rules; no imputation), succeeding for
+340,582 records (95.58% of those with an
+affiliation) across 159 countries or regions. A 90-record manual audit found no
+errors. Author country is a property of the publishing institution, not of the
+study population.</p>
+
+<h3>Burden data (L2 inputs)</h3>
+<p>GBD 2023 DALYs (primary) and prevalence (sensitivity calibre), all ages, both
+sexes, global aggregate plus 204 countries and territories (205 locations),
+annually 1995–2023, for cause ids 329, 674, 423, 444, 447, 450 and 480.
+Country DALY sums reproduce 99.83–99.96% of the corresponding global totals.
+The DALY <i>Number</i> metric is primary; the all-ages rate in the downloads is
+not age-standardised and is not used. <b>Last-period pairing:</b> burden periods
+match publication periods for the first five periods; in the last period the
+burden side covers 2020–2023 against publications 2020–2024. This one-year
+asymmetry is disclosed wherever last-period burden-relative quantities appear,
+and a sensitivity analysis restricts last-period publications to 2020–2023.</p>
+
+<h3>Attention–burden ratio (L2)</h3>
+<p>For period <i>t</i>, ABR = (a cause's share of the seven-cause publication
+pool) ÷ (its share of the seven-cause DALY pool). ABR 1 is proportionality
+within the pool; log2 ABR is reported, so +1 is a twofold publication excess
+over burden share and −1 a twofold deficit. Both shares are compositions inside
+the same seven-cause pool: the ABR is a within-specialty relative measure and
+supports no comparison outside the pool.</p>
+
+<h3>Geographic layer (L3 analysis)</h3>
+<p><b>Double-centroid distance.</b> The burden centroid is the DALY-weighted mean
+centre of country centres (frozen snapshot of the mledoze/countries dataset);
+the research centroid is the same construction weighted by parsed first-author
+records. The primary estimator is the <b>arithmetic mean centre</b>: the
+weighted arithmetic mean of latitudes combined with the circular (unit-vector)
+mean of longitudes; distances are haversine great-circle distances
+(R = 6,371.0088 km). The estimator was chosen after a documented diagnostic
+episode: the chordal (unit-vector) mean, initially frozen, placed several
+research centroids at implausible Arctic latitudes (oral cancer 1995–99 at
+82.0°N) because first-author distributions ring the Pacific and their
+horizontal components cancel; the spherical geometric median avoided the pole
+but degenerated for nasopharyngeal cancer, both centroids snapping to the same
+country centre and the distance collapsing to 0.0–0.3 km for three consecutive
+periods. All three estimators are frozen side by side for all 42 cause–period
+cells in the estimator-sensitivity table shipped with the archive; all three
+agree on the direction of every first-to-last distance change.</p>
+<p><b>Author shares.</b> The LMIC share is the proportion of parsed records
+whose first author is affiliated in a low- or middle-income country (World Bank
+low-, lower-middle- and upper-middle-income groups combined), with a
+decomposition excluding China. Income groups are the World Bank classification
+as frozen on 12 November 2026, <b>held fixed across all periods</b> — a disclosed
+simplification, since countries' classifications changed over 30 years. For
+burden-tier causes, the share of first authors in that cause's ten
+highest-DALY countries is also reported.</p>
+
+<h3>Decoupling typology (L4)</h3>
+<p>Each burden-tier cause is classified from three signals comparing the first
+and last periods: S, the relative change in its share of the 14-area pool;
+B, the relative change in its share of the seven-cause DALY pool; and A, the
+change in log2 ABR. The signed protocol fixed the type names and definitions —
+resolution-dilution, technology-ignited, burden-tracking, constant — and
+anything matching no rule is reported as <b>unclassified, never forced</b>. The
+protocol did not fix numeric thresholds; these were operationalised at the
+typology stage, before the classification was run (main ±25% for S and B,
+±0.5 for A; sensitivity sets ±15%/±0.3 and ±35%/±0.7 are reported with every
+assignment). The typology is therefore a descriptive classification under
+pre-stated definitions, not preregistered inference. Two reading rules apply:
+B is a share, so "burden falls" means relative dilution inside the pool only
+(annualised absolute DALYs rose for all seven causes, +3.9% to +101.3%); and
+type names are shape labels, not mechanism claims.</p>
+
+<h3>Sensitivity programme and verdicts</h3>
+<ul>
+<li><b>Lag window.</b> Pairing last-period publications with burden 0, 5 or 10
+years earlier changed no cause's log2 ABR sign (7/7 identical across lags);
+drift is at most 0.136 per five-year step and 0.271 over the full span.</li>
+<li><b>Publication window.</b> Restricting last-period publications to
+2020–2023 moved each last-period log2 ABR by less than 0.1, with no sign
+change.</li>
+<li><b>Burden calibre.</b> The prevalence calibre agrees with the primary
+calibre on five of seven last-period signs and five of seven trend directions.
+The sign exceptions are laryngeal cancer and otitis media (hearing loss is
+92.76% of the seven-cause prevalence pool, which compresses the other shares);
+the trend exceptions are other pharyngeal and thyroid cancer, both near-flat
+in both calibres. The two headline level claims — hearing loss deeply below
+parity and thyroid cancer at the largest excess — hold in both calibres.</li>
+<li><b>Terminology drift.</b> For each area, one backup query was specified and
+frozen in writing before any backup count was retrieved. The two queries agree
+on share direction for 12 of the 15 rows. Cochlear implants and tinnitus differ
+only across the ±5% direction band. <b>CRS/polyps reverses outright</b>
+(−26.6% primary vs +251.0% backup): the backup query uses only modern terms
+that entered routine use after the 2003–2004 consensus terminology, so it is
+structurally blind to the sinusitis-era literature. The reversal is read as
+terminology migration, and under the protocol's two-query rule the CRS share
+decline is withdrawn as a headline conclusion.</li>
+</ul>
+<p class="small">The lag-window and terminology analyses were completed on
+12 November 2026, after the primary layers were frozen; the backup queries were
+fixed before their counts existed. They are reported as completions of the
+protocol's sensitivity programme at the analysis stage, not as elements of the
+original preregistration timestamp.</p>
+
+<h3>Use of large language models</h3>
+<p>Large language models were used as assistive tools in this project: for
+development and debugging of analysis code, for orchestration of the analysis
+pipeline, and for assistance in drafting the manuscript. All data were produced
+by deterministic scripts from the public sources named above; every number
+reported here was verified against the frozen result files; no data, result or
+figure was generated by a language model.</p>
+
+</main>
+<footer class="site"><div class="wrap">
+Canonical site: <a href="https://burden.erbihou.org/">https://burden.erbihou.org</a> · Source code: <a href="https://github.com/yuye8848/ent-burden-atlas">GitHub repository</a> ·
+Frozen data &amp; code archive: <a href="https://doi.org/10.5281/zenodo.24157110">Zenodo, DOI 10.5281/zenodo.24157110</a> ·
+Preregistration: <a href="https://doi.org/10.17605/OSF.IO/NUC4B">OSF, DOI 10.17605/OSF.IO/NUC4B</a><br>
+This is a static site generated from frozen result files. It measures the configuration of research
+allocation only; it makes no judgement about the clinical value of research on any disease.
+</div></footer>
+</body>
+</html>
