@@ -11,7 +11,7 @@ attention–burden ratio (ABR), geographic double-centroid distances and
 first-author shares, and a rule-based decoupling typology.
 
 - **Canonical site:** https://burden.erbihou.org/ (GitHub Pages mirror:
-  https://yuye8848.github.io/ent-burden-atlas/)
+  https://ent-burden-atlas.github.io/ent-burden-atlas/)
 - **Preregistration:** OSF, DOI [10.17605/OSF.IO/NUC4B](https://doi.org/10.17605/OSF.IO/NUC4B)
 - **Frozen data & code archive:** Zenodo, DOI
   [10.5281/zenodo.24157110](https://doi.org/10.5281/zenodo.24157110)
