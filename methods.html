@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Methods · ENT Burden Atlas</title>
-<link rel="stylesheet" href="assets/style.css?v=3">
+<link rel="stylesheet" href="assets/style.css?v=4">
 </head>
 <body>
 <header class="site"><div class="wrap">
@@ -24,34 +24,73 @@ first — a 14-area publication pool and, inside it, a seven-cause burden pool �
 and every quantity is a composition within them. The protocol, disease pool and
 analysis layers were fixed in a signed work report and preregistered on the Open
 Science Framework before record-level production began
-(<a href="https://doi.org/10.17605/OSF.IO/NUC4B">registration DOI 10.17605/OSF.IO/NUC4B</a>). One amendment is documented:
-the Institute for Health Metrics and Evaluation retired GBD 2021, so Amendment
-v1.1 substituted <b>GBD 2023</b> (burden years 1995–2023). The study measures the
+(<a href="https://doi.org/10.17605/OSF.IO/NUC4B">registration DOI 10.17605/OSF.IO/NUC4B</a>). Two amendments are
+documented: the Institute for Health Metrics and Evaluation retired GBD 2021,
+so Amendment v1.1 substituted <b>GBD 2023</b> (burden years 1995–2023); and
+Amendment v1.2 (21 November 2026) corrected five search formulations (see
+"Formulation correction" below). The study measures the
 configuration of research allocation only; it makes no clinical-value judgement
 and no claim about how much research any disease deserves.</p>
+
+<h3>Formulation correction (Amendment v1.2, 21 November 2026)</h3>
+<div class="caveat"><b>Correction note.</b> A pre-submission audit found that
+two of the originally frozen formulations used anatomy terms alone, with no
+cancer limiter — "nasopharyngeal" and "oropharyngeal/hypopharyngeal" — and so
+counted large amounts of non-cancer literature. A sampled
+positive-predictive-value (PPV) audit of the original formulations (60 records
+per stratum per area, classified under rules written before sampling) gave,
+for nasopharyngeal cancer, PPV 0.333 (95% CI 0.227–0.459) in 2020–2021 and
+0.700 in other years; for other pharyngeal cancer, 0.683 and 0.833. The
+2020–2021 nasopharyngeal spike was predominantly COVID-19-era nasopharyngeal
+sampling literature, not nasopharyngeal cancer research. Five formulations
+were therefore corrected under one principle — a site concept combined with a
+cancer limiter set, or cancer-specific phrases only: nasopharyngeal and other
+pharyngeal cancer gained the limiter; oral cancer gained the lip expressions
+its GBD cause name requires (+487 records over 30 years, previously counted
+nowhere); laryngeal cancer gained twelve cancer-limited expressions it had
+been missing (+1,946 records, +24.9% — an undercount in the opposite
+direction); and CRS/polyps dropped the standalone term "sinusitis", through
+which 8,934 predominantly acute or general sinusitis records — a different
+entity — had entered a chronic-disease area. The remaining nine formulations
+were checked term by term and left unchanged. The census was recomputed in
+full on the corrected corpus, and every value on this site is on the
+corrected basis; the original formulations and their outputs are retained in
+the archive as the query-basis sensitivity. The original frozen results were
+not deleted or overwritten.</div>
 
 <h3>Publication census (L1)</h3>
 <p>Publications were counted in Europe PMC under one frozen title/abstract query
 per area, per year, 1995–2024 (420 area–year cells), and aggregated into six
-five-year periods. The L1 counts use the Europe PMC hitCount basis
-(392,458 records). Record-level retrieval for the geographic layer delivered
-392,456 records; two parts each contained one "phantom" record —
-counted in the hitCount but never delivered (D-1: oral cancer 2010–2014,
-4,806 vs 4,805 retrievable; D-2: obstructive sleep apnoea 2015–2019,
-11,604 vs 11,603). Each was accepted only after three scripted checks passed
-(unique identifiers; stable hitCount on re-query; identical identifier sets from
-an independent second retrieval channel) and both are itemised in a frozen
-discrepancy record shipped with the archive.</p>
+five-year periods. The primary basis is the corrected formulation set of
+Amendment v1.2 (five formulations corrected, nine checked and unchanged;
+each formulation is listed in the query file and mapping table on the
+Downloads page). The L1 counts use the Europe PMC hitCount basis
+(357,712 records). Record-level retrieval for the geographic layer delivered
+357,711 area-assigned records, corresponding to
+329,250 unique publications (24,998 assigned to
+two or more areas); retrieval for the five corrected areas was repeated on
+21 November 2026 (30 parts, 98,542 records, retrievable equal to hitCount in
+every part), and the nine unchanged areas retain their 9 November 2026
+retrieval. One part contained one "phantom" record — counted in the hitCount
+but never delivered (D-2: obstructive sleep apnoea 2015–2019, 11,604 vs
+11,603). A second phantom in the original retrieval (D-1: oral cancer
+2010–2014) did not recur in the corrected re-retrieval. Each phantom was
+accepted only after three scripted checks passed (unique identifiers; stable
+hitCount on re-query; identical identifier sets from an independent second
+retrieval channel), and both are itemised in a frozen discrepancy record
+shipped with the archive.</p>
 
 <h3>Country parsing (L3 production)</h3>
-<p>A first-author affiliation was present for 356,332 records
-(90.80%). Affiliation strings were parsed to a
+<p>A first-author affiliation was present for 325,206 records
+(90.91%). Affiliation strings were parsed to a
 country or region by a four-layer dictionary procedure (institution and city
 dictionaries with disambiguation rules; no imputation), succeeding for
-340,582 records (95.58% of those with an
-affiliation) across 159 countries or regions. A 90-record manual audit found no
-errors. Author country is a property of the publishing institution, not of the
-study population.</p>
+310,722 records (95.55% of those with an
+affiliation) across 157 countries or regions. A 90-record manual audit detected
+no errors (0 of 90; 95% upper bound for the error rate ≈ 3.3%). The most
+frequent first-author countries among parsed records were the United States
+(69,049 records), China (47,959) and Japan (16,947). Author country is a
+property of the publishing institution, not of the study population.</p>
 
 <h3>Burden data (L2 inputs)</h3>
 <p>GBD 2023 DALYs (primary) and prevalence (sensitivity calibre), all ages, both
@@ -88,8 +127,11 @@ horizontal components cancel; the spherical geometric median avoided the pole
 but degenerated for nasopharyngeal cancer, both centroids snapping to the same
 country centre and the distance collapsing to 0.0–0.3 km for three consecutive
 periods. All three estimators are frozen side by side for all 42 cause–period
-cells in the estimator-sensitivity table shipped with the archive; all three
-agree on the direction of every first-to-last distance change.</p>
+cells in the estimator-sensitivity table shipped with the archive. For the
+nine areas whose retrieval was not repeated, all three estimators agree on
+the direction of every first-to-last distance change; the five corrected
+areas were recomputed under the primary (arithmetic mean centre) estimator
+only, and their corrected distances rest on that estimator.</p>
 <p><b>Author shares.</b> The LMIC share is the proportion of parsed records
 whose first author is affiliated in a low- or middle-income country (World Bank
 low-, lower-middle- and upper-middle-income groups combined), with a
@@ -118,33 +160,64 @@ type names are shape labels, not mechanism claims.</p>
 <h3>Sensitivity programme and verdicts</h3>
 <ul>
 <li><b>Lag window.</b> Pairing last-period publications with burden 0, 5 or 10
-years earlier changed no cause's log2 ABR sign (7/7 identical across lags);
-drift is at most 0.136 per five-year step and 0.271 over the full span.</li>
+years earlier changed no cause's last-period log2 ABR sign (7/7 identical
+across lags). Across the full per-period grid, one cell is not sign-stable:
+laryngeal cancer in 2005–2009 sits at +0.17 / +0.09 / −0.02 across the three
+lags — at parity under every pairing — and is disclosed as such rather than
+absorbed into a blanket stability claim.</li>
 <li><b>Publication window.</b> Restricting last-period publications to
-2020–2023 moved each last-period log2 ABR by less than 0.1, with no sign
+2020–2023 moved each last-period log2 ABR by less than 0.05, with no sign
 change.</li>
 <li><b>Burden calibre.</b> The prevalence calibre agrees with the primary
-calibre on five of seven last-period signs and five of seven trend directions.
+calibre on five of seven last-period signs and six of seven trend directions.
 The sign exceptions are laryngeal cancer and otitis media (hearing loss is
-92.76% of the seven-cause prevalence pool, which compresses the other shares);
-the trend exceptions are other pharyngeal and thyroid cancer, both near-flat
-in both calibres. The two headline level claims — hearing loss deeply below
-parity and thyroid cancer at the largest excess — hold in both calibres.</li>
+92.8% of the seven-cause prevalence pool, which compresses the other shares
+towards zero and inflates their ratios); the trend exception is other
+pharyngeal cancer alone, near-flat in both calibres. The headline level
+claims hold in kind in both calibres: hearing loss is the most negative
+value under prevalence, and the cancer excesses are larger, not smaller.</li>
 <li><b>Terminology drift.</b> For each area, one backup query was specified and
-frozen in writing before any backup count was retrieved. The two queries agree
-on share direction for 12 of the 15 rows. Cochlear implants and tinnitus differ
-only across the ±5% direction band. <b>CRS/polyps reverses outright</b>
-(−26.6% primary vs +251.0% backup): the backup query uses only modern terms
-that entered routine use after the 2003–2004 consensus terminology, so it is
-structurally blind to the sinusitis-era literature. The reversal is read as
-terminology migration, and under the protocol's two-query rule the CRS share
-decline is withdrawn as a headline conclusion.</li>
+frozen in writing before any backup count was retrieved. The corrected
+primary and backup formulations agree on share direction for 13 of the 15
+rows (14 areas plus the five-cancer combination). The two disagreements are
+cochlear implants (primary +1.8% vs backup −9.7%) and tinnitus (+6.4% vs
+−5.8%, a pure denominator effect). <b>CRS/polyps is reported under three
+formulations</b> (corrected primary +26.3%; original −26.6%; backup
++251.0%): the backup formulation uses only modern terms that entered routine
+use after the 2003–2004 consensus terminology, so it is structurally blind
+to the sinusitis-era literature. The three formulations count three
+different literatures, and under the protocol's two-formulation rule no CRS
+share-direction claim is carried as a headline conclusion.</li>
+<li><b>Multi-assignment bases.</b> The record-level quantities were
+recomputed under fractional weights (each publication contributing 1/k to
+each of its k areas) and on the single-assignment subset. All seven causes
+keep their last-period ABR signs under all three bases; otitis media's
+single-assignment value is +0.22 on the corrected corpus (it was −0.23 on
+the original corpus).</li>
+<li><b>Historical income classification.</b> Reclassifying each period by the
+World Bank classification in force at its first year raises the LMIC series
+to 10.5% → 41.7% (fixed classification: 7.8% → 40.6%), and the
+excluding-China series to 7.8% → 17.9% (fixed: 5.1% → 16.8%). The
+early-period level is classification-dependent; the rise is not.</li>
+<li><b>Query basis.</b> Every primary quantity was recomputed under the
+original (broad) formulations and set against the corrected basis. The
+nasopharyngeal share surge disappears (+61.6% original vs +10.6%
+corrected); its last-period ABR falls from 5.94 to 2.98; its typology
+assignment changes from technology-ignited under all threshold sets to
+unclassified under all sets; and its centroid distance changes sign, from a
+48% contraction with a final-period rebound to a 105% widening from a close
+start. Laryngeal cancer corrects in the opposite direction (first-period
+log2 ABR −0.18 → +0.35). Every headline not involving the corrected areas
+is unchanged in direction on both bases.</li>
 </ul>
 <p class="small">The lag-window and terminology analyses were completed on
 12 November 2026, after the primary layers were frozen; the backup queries were
-fixed before their counts existed. They are reported as completions of the
-protocol's sensitivity programme at the analysis stage, not as elements of the
-original preregistration timestamp.</p>
+fixed before their counts existed. The multi-assignment and historical-income
+analyses were completed on 13 November 2026 at the revision stage, and the
+query-basis analysis on 21 November 2026 under Amendment v1.2. They are
+reported as completions of the protocol's sensitivity programme at their
+respective stages, not as elements of the original preregistration
+timestamp.</p>
 
 <h3>Use of large language models</h3>
 <p>Large language models were used as assistive tools in this project: for

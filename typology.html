@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Typology · ENT Burden Atlas</title>
-<link rel="stylesheet" href="assets/style.css?v=3">
+<link rel="stylesheet" href="assets/style.css?v=4">
 </head>
 <body>
 <header class="site"><div class="wrap">
@@ -28,20 +28,21 @@ three-signal framework; anything matching no rule is reported as
 <h3>Burden tier (main thresholds ±25% for S and B, ±0.5 for A)</h3>
 <table>
 <tr><th class="l">Cause</th><th>S</th><th>B</th><th>A</th><th class="l">Main type</th><th class="l">Low set (±15% / ±0.3)</th><th class="l">High set (±35% / ±0.7)</th></tr>
-<tr><td class="l">Otitis media</td><td>-65.5%</td><td>-33.0%</td><td>-1.04</td><td class="l"><b>Resolution-dilution</b></td><td class="l">Resolution-dilution</td><td class="l">Unclassified</td></tr><tr><td class="l">Hearing loss</td><td>-17.1%</td><td>+5.0%</td><td>-0.42</td><td class="l"><b>Constant</b></td><td class="l">Unclassified</td><td class="l">Constant</td></tr><tr class="mute"><td class="l">Laryngeal cancer</td><td>-56.9%</td><td>-18.1%</td><td>-1.01</td><td class="l"><b>Unclassified</b></td><td class="l">Resolution-dilution</td><td class="l">Unclassified</td></tr><tr><td class="l">Lip and oral cavity cancer</td><td>+97.7%</td><td>+8.6%</td><td>+0.78</td><td class="l"><b>Technology-ignited</b></td><td class="l">Technology-ignited</td><td class="l">Technology-ignited</td></tr><tr><td class="l">Nasopharyngeal cancer</td><td>+61.6%</td><td>-38.3%</td><td>+1.31</td><td class="l"><b>Technology-ignited</b></td><td class="l">Technology-ignited</td><td class="l">Technology-ignited</td></tr><tr class="mute"><td class="l">Other pharyngeal cancer</td><td>+36.5%</td><td>+19.5%</td><td>+0.11</td><td class="l"><b>Unclassified</b></td><td class="l">Burden-tracking</td><td class="l">Unclassified</td></tr><tr class="mute"><td class="l">Thyroid cancer</td><td>+26.1%</td><td>+4.8%</td><td>+0.19</td><td class="l"><b>Unclassified</b></td><td class="l">Unclassified</td><td class="l">Constant</td></tr>
+<tr><td class="l">Otitis media</td><td>-64.1%</td><td>-33.0%</td><td>-0.87</td><td class="l"><b>Resolution-dilution</b></td><td class="l">Resolution-dilution</td><td class="l">Unclassified</td></tr><tr><td class="l">Hearing loss</td><td>-13.5%</td><td>+5.0%</td><td>-0.25</td><td class="l"><b>Constant</b></td><td class="l">Constant</td><td class="l">Constant</td></tr><tr class="mute"><td class="l">Laryngeal cancer</td><td>-60.2%</td><td>-18.1%</td><td>-1.02</td><td class="l"><b>Unclassified</b></td><td class="l">Resolution-dilution</td><td class="l">Unclassified</td></tr><tr><td class="l">Lip and oral cavity cancer</td><td>+100.4%</td><td>+8.6%</td><td>+0.91</td><td class="l"><b>Technology-ignited</b></td><td class="l">Technology-ignited</td><td class="l">Technology-ignited</td></tr><tr class="mute"><td class="l">Nasopharyngeal cancer</td><td>+10.7%</td><td>-38.3%</td><td>+0.87</td><td class="l"><b>Unclassified</b></td><td class="l">Unclassified</td><td class="l">Unclassified</td></tr><tr class="mute"><td class="l">Other pharyngeal cancer</td><td>+34.1%</td><td>+19.5%</td><td>+0.19</td><td class="l"><b>Unclassified</b></td><td class="l">Burden-tracking</td><td class="l">Constant</td></tr><tr class="mute"><td class="l">Thyroid cancer</td><td>+31.5%</td><td>+4.8%</td><td>+0.35</td><td class="l"><b>Unclassified</b></td><td class="l">Technology-ignited</td><td class="l">Constant</td></tr>
 </table>
-<p>Sensitivity behaviour: nasopharyngeal and oral cancer are
-technology-ignited under all three threshold sets — the only two fully
-robust assignments. Otitis media is resolution-dilution under the main and
-low sets and unclassified under the high set. Hearing loss is constant
-under the main and high sets and unclassified under the low set; its type
-describes dynamics only and must be read together with its level — ABR
-0.36 in 2020–24 (log2 ABR −1.47), the pool's deepest deficit. Of the three
-causes unclassified under the main thresholds, laryngeal cancer becomes
-resolution-dilution under the low set, other pharyngeal cancer becomes
-burden-tracking under the low set, and thyroid cancer becomes constant
-under the high set. Each sits near a rule boundary; the classification
-reports that rather than resolving it by fiat.</p>
+<p>Sensitivity behaviour: oral cancer is technology-ignited under all three
+threshold sets, hearing loss is constant under all three, and
+nasopharyngeal cancer is unclassified under all three. Otitis media is
+resolution-dilution under the main and low sets and unclassified under the
+high set. Hearing loss's type describes dynamics only and must be read
+together with its level — ABR 0.43 in 2020–24 (log2 ABR −1.20), the pool's
+deepest deficit. Of the four causes unclassified under the main thresholds,
+laryngeal cancer becomes resolution-dilution under the low set, other
+pharyngeal cancer becomes burden-tracking under the low set and constant
+under the high set, and thyroid cancer becomes technology-ignited under
+the low set and constant under the high set. Each sits near a rule
+boundary; the classification reports that rather than resolving it by
+fiat.</p>
 
 <h3>Attention tier: share-dynamics labels only</h3>
 <p>Attention-tier areas have no GBD-matched burden cause, so they receive
@@ -49,9 +50,9 @@ no type — only a label for the direction of their pool-share change under
 the same bands.</p>
 <table>
 <tr><th class="l">Area</th><th>Share 1995–99 → 2020–24</th><th>S</th><th class="l">Label (main band)</th><th class="l">Low band</th><th class="l">High band</th></tr>
-<tr><td class="l">Chronic rhinosinusitis / nasal polyps (CRS) *</td><td>8.5% → 6.3%</td><td>-26.6%</td><td class="l"><b>Share falling</b></td><td class="l">Share falling</td><td class="l">Share stable</td></tr><tr><td class="l">Allergic rhinitis</td><td>6.1% → 4.6%</td><td>-25.5%</td><td class="l"><b>Share falling</b></td><td class="l">Share falling</td><td class="l">Share stable</td></tr><tr><td class="l">Obstructive sleep apnoea</td><td>9.9% → 12.5%</td><td>+25.8%</td><td class="l"><b>Share rising</b></td><td class="l">Share rising</td><td class="l">Share stable</td></tr><tr><td class="l">Tinnitus</td><td>3.5% → 3.5%</td><td>+2.0%</td><td class="l"><b>Share stable</b></td><td class="l">Share stable</td><td class="l">Share stable</td></tr><tr><td class="l">Vertigo</td><td>4.6% → 3.5%</td><td>-24.9%</td><td class="l"><b>Share stable</b></td><td class="l">Share falling</td><td class="l">Share stable</td></tr><tr><td class="l">Cholesteatoma</td><td>2.0% → 0.9%</td><td>-53.9%</td><td class="l"><b>Share falling</b></td><td class="l">Share falling</td><td class="l">Share falling</td></tr><tr><td class="l">Cochlear implants</td><td>4.5% → 4.4%</td><td>-2.4%</td><td class="l"><b>Share stable</b></td><td class="l">Share stable</td><td class="l">Share stable</td></tr>
+<tr><td class="l">Chronic rhinosinusitis / nasal polyps (CRS) *</td><td>4.3% → 5.4%</td><td>+26.3%</td><td class="l"><b>Share rising</b></td><td class="l">Share rising</td><td class="l">Share stable</td></tr><tr><td class="l">Allergic rhinitis</td><td>6.7% → 5.2%</td><td>-22.3%</td><td class="l"><b>Share stable</b></td><td class="l">Share falling</td><td class="l">Share stable</td></tr><tr><td class="l">Obstructive sleep apnoea</td><td>10.8% → 14.2%</td><td>+31.2%</td><td class="l"><b>Share rising</b></td><td class="l">Share rising</td><td class="l">Share stable</td></tr><tr><td class="l">Tinnitus</td><td>3.8% → 4.0%</td><td>+6.4%</td><td class="l"><b>Share stable</b></td><td class="l">Share stable</td><td class="l">Share stable</td></tr><tr><td class="l">Vertigo</td><td>5.1% → 4.0%</td><td>-21.6%</td><td class="l"><b>Share stable</b></td><td class="l">Share falling</td><td class="l">Share stable</td></tr><tr><td class="l">Cholesteatoma</td><td>2.2% → 1.1%</td><td>-52.0%</td><td class="l"><b>Share falling</b></td><td class="l">Share falling</td><td class="l">Share falling</td></tr><tr><td class="l">Cochlear implants</td><td>4.9% → 5.0%</td><td>+1.8%</td><td class="l"><b>Share stable</b></td><td class="l">Share stable</td><td class="l">Share stable</td></tr>
 </table>
-<div class="caveat">* CRS/polyps: Terminology caveat: under a pre-frozen backup query built only from modern post-consensus terms, the CRS share change reverses (+251.0% instead of −26.6%). The apparent decline is read as terminology migration, not as a change in research volume, and is not carried as a headline conclusion.</div>
+<div class="caveat">* CRS/polyps: Formulation note: this area is reported under three formulations, which count three different literatures. Under the corrected primary formulation its pool share rose (+26.3%); under the original formulation it fell (−26.6%); under a pre-frozen backup formulation built only from modern post-consensus terms it rose +251.0%. No share-direction claim for this area is carried as a headline conclusion.</div>
 
 <h3>How to read this page</h3>
 <p><b>B is a share, not a level.</b> A falling B means relative dilution

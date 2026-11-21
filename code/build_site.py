@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """ENT Burden Atlas — static site generator.
 
-Reads ONLY the frozen result files of the ENT attention-burden census
-(~/workspace/ent-attention-burden/data_l1|l2|l3|l4), asserts the headline
-numbers frozen in the project record, and emits a pure-static bilingual
+Reads ONLY the corrected frozen result files of the ENT
+attention-burden census, as prepared into site_build/precise_data/ by
+prep_precise_data.py from the 2026-11-21 fix round
+(~/workspace/ent-attention-burden/fix_round_2026-11-21/; corrected,
+cancer-limited search formulations under OSF Amendment v1.2), asserts
+the corrected headline numbers, and emits a pure-static bilingual
 website (English at the root URLs, a full Chinese mirror under zh/;
 HTML + one CSS file + build-time inline SVG charts) into site_build/site/.
 
 No number is typed into the pages by hand: every value comes from the
-frozen CSVs, and the build fails if any headline assertion fails.
+prepared CSVs, and the build fails if any headline assertion fails.
 """
 import csv
 import json
@@ -28,7 +31,12 @@ ZENODO_URL = "https://doi.org/" + ZENODO_DOI
 ASSET_V = CFG.get("asset_version", "1")
 OSF_DOI = "10.17605/OSF.IO/NUC4B"
 OSF_URL = "https://doi.org/" + OSF_DOI
-REPO_URL = "https://github.com/yuye8848/ent-burden-atlas"
+REPO_URL = "https://github.com/ent-burden-atlas/ent-burden-atlas"
+# Corpus identity on the corrected basis (fix round A1 redo,
+# a1_redo/a1_old_vs_new.md): the 357,711 area-assigned records are
+# 329,250 unique publications; 24,998 sit in two or more areas.
+UNIQUE_PUBS = 329250
+MULTI_ASSIGNED = 24998
 CANONICAL = "https://burden.erbihou.org"
 
 PERIODS = ["1995-1999", "2000-2004", "2005-2009", "2010-2014",
@@ -76,11 +84,13 @@ TYPE_LABEL = {
     "share_rising": "Share rising",
     "share_stable": "Share stable",
 }
-CRS_CAVEAT = ("Terminology caveat: under a pre-frozen backup query built only "
-              "from modern post-consensus terms, the CRS share change reverses "
-              "(+251.0% instead of −26.6%). The apparent decline is read as "
-              "terminology migration, not as a change in research volume, and "
-              "is not carried as a headline conclusion.")
+CRS_CAVEAT = ("Formulation note: this area is reported under three "
+              "formulations, which count three different literatures. Under "
+              "the corrected primary formulation its pool share rose "
+              "(+26.3%); under the original formulation it fell (−26.6%); "
+              "under a pre-frozen backup formulation built only from modern "
+              "post-consensus terms it rose +251.0%. No share-direction "
+              "claim for this area is carried as a headline conclusion.")
 
 # ------------------------------------------------------------- Chinese mirror
 # Terminology is taken verbatim from the project's Chinese documents (signed
@@ -125,9 +135,10 @@ TYPE_LABEL_ZH = {
     "share_stable": "份额稳定型",
 }
 DIR_ZH = {"down": "降", "stable": "稳", "up": "升"}
-CRS_CAVEAT_ZH = ("术语注记：若改用一条在计数前已冻结、仅由现代共识后术语构建的备用检索式，"
-                 "CRS 的份额变化将翻转（+251.0%，而非 −26.6%）。这一表面下降应按术语迁移解读，"
-                 "而非研究量的变化，且不作为头条结论。")
+CRS_CAVEAT_ZH = ("检索式注记：本病区按三种检索式并报，三者数的是三批不同的文献。"
+                 "更正后的主检索式下其池内份额上升（+26.3%）；原始检索式下下降（−26.6%）；"
+                 "一条在计数前已冻结、仅由现代共识后术语构建的备用检索式下上升 +251.0%。"
+                 "因此本病区的份额方向不作为头条结论。")
 NAV = [("index.html", "Home", "首页"), ("areas.html", "Areas", "病区"),
        ("findings.html", "Findings", "头条结论"),
        ("geography.html", "Geography", "地理"),
@@ -157,7 +168,7 @@ def km(x):
 
 
 # ---------------------------------------------------------------- load data
-yearly = read_csv("data_l1/l1_counts_by_year.csv")
+yearly = read_csv("site_build/precise_data/l1_counts_by_year.csv")
 counts = {(r["area"], int(r["year"])): int(r["count"]) for r in yearly}
 period_years = {p: range(int(p[:4]), int(p[:4]) + 5) for p in PERIODS}
 pcount = {(a, p): sum(counts[(a, y)] for y in period_years[p])
@@ -165,18 +176,18 @@ pcount = {(a, p): sum(counts[(a, y)] for y in period_years[p])
 pool = {p: sum(pcount[(a, p)] for a in AREAS) for p in PERIODS}
 share = {(a, p): 100.0 * pcount[(a, p)] / pool[p] for a in AREAS for p in PERIODS}
 
-abr_rows = read_csv("data_l2/abr/abr_primary.csv")
+abr_rows = read_csv("site_build/precise_data/abr_primary.csv")
 abr = {(r["area"], r["period"]): r for r in abr_rows}
-dist_rows = read_csv("data_l3/geo/centroid/double_centroid.csv")
+dist_rows = read_csv("site_build/precise_data/double_centroid.csv")
 dist = {(r["area"], r["period"]): r for r in dist_rows}
-signals = {r["area"]: r for r in read_csv("data_l4/signals.csv")}
-typology = {r["area"]: r for r in read_csv("data_l4/typology.csv")}
-term = {r["area"]: r for r in read_csv("data_l1/terminology_sensitivity.csv")}
+signals = {r["area"]: r for r in read_csv("site_build/precise_data/signals.csv")}
+typology = {r["area"]: r for r in read_csv("site_build/precise_data/typology.csv")}
+term = {r["area"]: r for r in read_csv("site_build/precise_data/terminology_sensitivity.csv")}
 ashare = {(r["area"], r["period"]): r
-          for r in read_csv("data_l3/geo/centroid/author_shares.csv")}
+          for r in read_csv("site_build/precise_data/author_shares.csv")}
 lmic = {r["period"]: r for r in
-        read_csv("data_l3/geo/centroid/lmic_series_recomputed.csv")}
-coverage = read_csv("data_l3/geo/parse_coverage.csv")
+        read_csv("site_build/precise_data/lmic_series_recomputed.csv")}
+coverage = read_csv("site_build/precise_data/parse_coverage.csv")
 tot_records = sum(int(r["records"]) for r in coverage)
 tot_aff = sum(int(r["with_aff"]) for r in coverage)
 tot_parsed = sum(int(r["parsed"]) for r in coverage)
@@ -195,38 +206,38 @@ def close(a, b, tol):
     return abs(a - b) <= tol
 
 
-check("pool 1995-1999 = 26,544", pool["1995-1999"] == 26544)
-check("pool 2020-2024 = 128,117", pool["2020-2024"] == 128117)
+check("pool 1995-1999 = 24,251", pool["1995-1999"] == 24251)
+check("pool 2020-2024 = 112,267", pool["2020-2024"] == 112267)
 fc_first = sum(share[(a, "1995-1999")] for a in CANCERS5)
 fc_last = sum(share[(a, "2020-2024")] for a in CANCERS5)
-check("five-cancer share 32.1% (first)", close(fc_first, 32.1, 0.1))
-check("five-cancer share 44.6% (last)", close(fc_last, 44.6, 0.1))
+check("five-cancer share 30.7% (first)", close(fc_first, 30.7, 0.1))
+check("five-cancer share 38.5% (last)", close(fc_last, 38.5, 0.1))
 hl_f = abr[("hearing_loss", "1995-1999")]
 hl_l = abr[("hearing_loss", "2020-2024")]
-check("hearing log2 ABR first −1.05", close(float(hl_f["log2_abr"]), -1.05, 0.01))
-check("hearing log2 ABR last −1.47", close(float(hl_l["log2_abr"]), -1.47, 0.01))
-check("hearing ABR last 0.36", close(float(hl_l["abr"]), 0.36, 0.01))
+check("hearing log2 ABR first −0.95", close(float(hl_f["log2_abr"]), -0.95, 0.01))
+check("hearing log2 ABR last −1.20", close(float(hl_l["log2_abr"]), -1.20, 0.01))
+check("hearing ABR last 0.43", close(float(hl_l["abr"]), 0.43, 0.01))
 check("hearing DALY share last 72.7%",
       close(100 * float(hl_l["burden_share_pool"]), 72.7, 0.15))
-check("hearing pub share last 26.3%",
-      close(100 * float(hl_l["pub_share_burden_pool"]), 26.3, 0.15))
+check("hearing pub share last 31.6%",
+      close(100 * float(hl_l["pub_share_burden_pool"]), 31.6, 0.15))
 EXP_DIST = {"otitis_media": (10180, 2013), "hearing_loss": (9751, 3799),
-            "larynx_cancer": (4397, 1404), "oral_cancer": (4706, 1102),
-            "nasopharynx_cancer": (4785, 2467),
-            "other_pharynx_cancer": (8621, 5242), "thyroid_cancer": (6975, 1756)}
+            "larynx_cancer": (4776, 1400), "oral_cancer": (4947, 1081),
+            "nasopharynx_cancer": (780, 1601),
+            "other_pharynx_cancer": (6939, 5957), "thyroid_cancer": (6975, 1756)}
 for a, (d0, d1) in EXP_DIST.items():
     check(f"distance {a} first {d0:,}",
           round(float(dist[(a, "1995-1999")]["distance_km"])) == d0)
     check(f"distance {a} last {d1:,}",
           round(float(dist[(a, "2020-2024")]["distance_km"])) == d1)
-check("LMIC share first 7.9%", close(float(lmic["1995-1999"]["lmic_share_all"]), 7.9, 0.1))
-check("LMIC share last 39.8%", close(float(lmic["2020-2024"]["lmic_share_all"]), 39.8, 0.1))
-check("LMIC excl-China first 5.4%",
-      close(float(lmic["1995-1999"]["lmic_share_excl_china"]), 5.4, 0.1))
-check("LMIC excl-China last 17.9%",
-      close(float(lmic["2020-2024"]["lmic_share_excl_china"]), 17.9, 0.1))
+check("LMIC share first 7.8%", close(float(lmic["1995-1999"]["lmic_share_all"]), 7.8, 0.1))
+check("LMIC share last 40.6%", close(float(lmic["2020-2024"]["lmic_share_all"]), 40.6, 0.1))
+check("LMIC excl-China first 5.1%",
+      close(float(lmic["1995-1999"]["lmic_share_excl_china"]), 5.1, 0.1))
+check("LMIC excl-China last 16.8%",
+      close(float(lmic["2020-2024"]["lmic_share_excl_china"]), 16.8, 0.1))
 EXP_TYPE = {"otitis_media": "resolution_dilution",
-            "nasopharynx_cancer": "technology_ignited",
+            "nasopharynx_cancer": "unclassified",
             "oral_cancer": "technology_ignited",
             "hearing_loss": "constant",
             "larynx_cancer": "unclassified",
@@ -235,22 +246,22 @@ EXP_TYPE = {"otitis_media": "resolution_dilution",
 for a, t in EXP_TYPE.items():
     check(f"typology {a} = {t}", typology[a]["type_main"] == t)
 agree = sum(1 for r in term.values() if r["directions_agree"] == "yes")
-check("terminology directions agree 12/15", agree == 12 and len(term) == 15)
+check("terminology directions agree 13/15", agree == 13 and len(term) == 15)
 crs = term["crs_polyps"]
-check("CRS primary rel change −26.6%",
-      close(float(crs["primary_rel_change_pct"]), -26.6, 0.1))
+check("CRS primary rel change +26.3%",
+      close(float(crs["primary_rel_change_pct"]), 26.3, 0.1))
 check("CRS backup rel change +251.0%",
       close(float(crs["backup_rel_change_pct"]), 251.0, 0.1))
-check("retrievable records 392,456", tot_records == 392456)
-check("with affiliation 356,332", tot_aff == 356332)
-check("parsed 340,582", tot_parsed == 340582)
+check("area-assigned records 357,711", tot_records == 357711)
+check("with affiliation 325,206", tot_aff == 325206)
+check("parsed 310,722", tot_parsed == 310722)
 
 # --- assertions for the A–F extension (home cards, findings, geography,
 # --- typology pages); expectations transcribed from the frozen record
 # --- (manuscript §3.2–3.4, centroid FREEZE_v2, L4 freeze).
-EXP_ABR_LAST = {"otitis_media": 1.27, "hearing_loss": 0.36, "larynx_cancer": 0.44,
-                "oral_cancer": 1.57, "nasopharynx_cancer": 5.94,
-                "other_pharynx_cancer": 2.82, "thyroid_cancer": 9.45}
+EXP_ABR_LAST = {"otitis_media": 1.53, "hearing_loss": 0.43, "larynx_cancer": 0.63,
+                "oral_cancer": 1.91, "nasopharynx_cancer": 2.98,
+                "other_pharynx_cancer": 1.99, "thyroid_cancer": 11.37}
 for a, v in EXP_ABR_LAST.items():
     check(f"ABR last {a} = {v}",
           close(float(abr[(a, "2020-2024")]["abr"]), v, 0.01))
@@ -259,26 +270,27 @@ check("otitis media publications 3,706 last", pcount[("otitis_media", "2020-2024
 check("hearing publications 5,411 first", pcount[("hearing_loss", "1995-1999")] == 5411)
 check("hearing publications 21,659 last", pcount[("hearing_loss", "2020-2024")] == 21659)
 lar_f, lar_l = abr[("larynx_cancer", "1995-1999")], abr[("larynx_cancer", "2020-2024")]
-check("larynx log2 ABR first −0.18", close(float(lar_f["log2_abr"]), -0.18, 0.01))
-check("larynx log2 ABR last −1.18", close(float(lar_l["log2_abr"]), -1.18, 0.01))
+check("larynx log2 ABR first +0.35", close(float(lar_f["log2_abr"]), 0.35, 0.01))
+check("larynx log2 ABR last −0.67", close(float(lar_l["log2_abr"]), -0.67, 0.01))
 thy_f, thy_l = abr[("thyroid_cancer", "1995-1999")], abr[("thyroid_cancer", "2020-2024")]
-check("thyroid log2 ABR first +3.05", close(float(thy_f["log2_abr"]), 3.05, 0.01))
-check("thyroid log2 ABR last +3.24", close(float(thy_l["log2_abr"]), 3.24, 0.01))
+check("thyroid log2 ABR first +3.15", close(float(thy_f["log2_abr"]), 3.15, 0.01))
+check("thyroid log2 ABR last +3.51", close(float(thy_l["log2_abr"]), 3.51, 0.01))
 check("hearing DALY share first 69.2%",
       close(100 * float(hl_f["burden_share_pool"]), 69.2, 0.15))
-check("hearing pub share (burden pool) first 33.5%",
-      close(100 * float(hl_f["pub_share_burden_pool"]), 33.5, 0.15))
-# geography: trajectory landmarks frozen in centroid FREEZE_v2
-check("oral distance 2000-2004 = 1,048",
-      round(float(dist[("oral_cancer", "2000-2004")]["distance_km"])) == 1048)
-check("oral distance 2005-2009 = 1,369",
-      round(float(dist[("oral_cancer", "2005-2009")]["distance_km"])) == 1369)
-check("oral distance 2010-2014 = 692",
-      round(float(dist[("oral_cancer", "2010-2014")]["distance_km"])) == 692)
-check("oral distance 2015-2019 = 1,292",
-      round(float(dist[("oral_cancer", "2015-2019")]["distance_km"])) == 1292)
-check("NPC distance 2015-2019 = 978",
-      round(float(dist[("nasopharynx_cancer", "2015-2019")]["distance_km"])) == 978)
+check("hearing pub share (burden pool) first 35.9%",
+      close(100 * float(hl_f["pub_share_burden_pool"]), 35.9, 0.15))
+# geography: trajectory landmarks frozen in centroid FREEZE_v2 (unchanged
+# areas) and the corrected re-pull (changed areas)
+check("oral distance 2000-2004 = 1,214",
+      round(float(dist[("oral_cancer", "2000-2004")]["distance_km"])) == 1214)
+check("oral distance 2005-2009 = 1,558",
+      round(float(dist[("oral_cancer", "2005-2009")]["distance_km"])) == 1558)
+check("oral distance 2010-2014 = 618",
+      round(float(dist[("oral_cancer", "2010-2014")]["distance_km"])) == 618)
+check("oral distance 2015-2019 = 1,187",
+      round(float(dist[("oral_cancer", "2015-2019")]["distance_km"])) == 1187)
+check("NPC distance 2015-2019 = 1,571",
+      round(float(dist[("nasopharynx_cancer", "2015-2019")]["distance_km"])) == 1571)
 check("thyroid distance 2015-2019 = 1,674",
       round(float(dist[("thyroid_cancer", "2015-2019")]["distance_km"])) == 1674)
 for a in ("otitis_media", "hearing_loss", "larynx_cancer"):
@@ -286,44 +298,57 @@ for a in ("otitis_media", "hearing_loss", "larynx_cancer"):
     check(f"distance monotone fall {a}",
           all(dv[i] > dv[i + 1] for i in range(len(dv) - 1)))
 dlast = [round(float(dist[(a, "2020-2024")]["distance_km"])) for a in BURDEN]
-check("last-period distance min 1,102", min(dlast) == 1102)
-check("last-period distance max 5,242", max(dlast) == 5242)
+check("last-period distance min 1,081", min(dlast) == 1081)
+check("last-period distance max 5,957", max(dlast) == 5957)
 for a in BURDEN:
     d0 = float(dist[(a, "1995-1999")]["distance_km"])
     d1 = float(dist[(a, "2020-2024")]["distance_km"])
     chg = 100 * (d1 - d0) / d0
-    check(f"distance change {a} within −80%..−39%", -81.0 <= chg <= -38.0)
+    if a == "nasopharynx_cancer":
+        check("distance change nasopharynx +105%", close(chg, 105.3, 1.0))
+    else:
+        check(f"distance change {a} within −81%..−13%", -81.0 <= chg <= -13.0)
 chn_first = (float(lmic["1995-1999"]["lmic_share_all"])
              - float(lmic["1995-1999"]["lmic_share_excl_china"]))
 chn_last = (float(lmic["2020-2024"]["lmic_share_all"])
             - float(lmic["2020-2024"]["lmic_share_excl_china"]))
-check("China share of parsed records first 2.5%", close(chn_first, 2.5, 0.1))
-check("China share of parsed records last 21.9%", close(chn_last, 21.9, 0.1))
-# typology: S/B/A signal values as frozen in the manuscript §3.4 record
-EXP_SIG = {"otitis_media": (-65.5, -33.0, -1.04), "hearing_loss": (-17.1, 5.0, -0.42),
-           "larynx_cancer": (-56.9, -18.1, -1.01), "oral_cancer": (97.7, 8.6, 0.78),
-           "nasopharynx_cancer": (61.7, -38.3, 1.31),
-           "other_pharynx_cancer": (36.6, 19.5, 0.11), "thyroid_cancer": (26.2, 4.8, 0.19)}
+check("China share of parsed records first 2.7%", close(chn_first, 2.7, 0.1))
+check("China share of parsed records last 23.8%", close(chn_last, 23.8, 0.1))
+# typology: S/B/A signal values as frozen in the corrected L4 record
+EXP_SIG = {"otitis_media": (-64.1, -33.0, -0.87), "hearing_loss": (-13.5, 5.0, -0.25),
+           "larynx_cancer": (-60.2, -18.1, -1.02), "oral_cancer": (100.4, 8.6, 0.91),
+           "nasopharynx_cancer": (10.6, -38.3, 0.87),
+           "other_pharynx_cancer": (34.1, 19.5, 0.19), "thyroid_cancer": (31.5, 4.8, 0.35)}
 for a, (sv, bv, av) in EXP_SIG.items():
     check(f"signal S {a} = {sv}", close(float(signals[a]["S_rel_pct"]), sv, 0.15))
     check(f"signal B {a} = {bv}", close(float(signals[a]["B_rel_pct"]), bv, 0.15))
     check(f"signal A {a} = {av}", close(float(signals[a]["A_delta"]), av, 0.015))
-for a in ("nasopharynx_cancer", "oral_cancer"):
-    t = typology[a]
-    check(f"typology robust {a}",
-          t["type_low"] == t["type_main"] == t["type_high"]
-          and t["robust_across_thresholds"] == "1")
+t = typology["oral_cancer"]
+check("typology robust oral_cancer (technology-ignited, all sets)",
+      t["type_low"] == t["type_main"] == t["type_high"] == "technology_ignited"
+      and t["robust_across_thresholds"] == "1")
+t = typology["hearing_loss"]
+check("typology robust hearing_loss (constant, all sets)",
+      t["type_low"] == t["type_main"] == t["type_high"] == "constant"
+      and t["robust_across_thresholds"] == "1")
+t = typology["nasopharynx_cancer"]
+check("typology nasopharynx unclassified under all sets",
+      t["type_low"] == t["type_main"] == t["type_high"] == "unclassified")
 check("larynx low set = resolution_dilution",
       typology["larynx_cancer"]["type_low"] == "resolution_dilution")
 check("other pharynx low set = burden_tracking",
       typology["other_pharynx_cancer"]["type_low"] == "burden_tracking")
+check("other pharynx high set = constant",
+      typology["other_pharynx_cancer"]["type_high"] == "constant")
+check("thyroid low set = technology_ignited",
+      typology["thyroid_cancer"]["type_low"] == "technology_ignited")
 check("thyroid high set = constant",
       typology["thyroid_cancer"]["type_high"] == "constant")
 check("otitis high set = unclassified",
       typology["otitis_media"]["type_high"] == "unclassified")
-check("hearing low set = unclassified",
-      typology["hearing_loss"]["type_low"] == "unclassified")
-EXP_ATT_TYPE = {"crs_polyps": "share_falling", "allergic_rhinitis": "share_falling",
+check("hearing low set = constant",
+      typology["hearing_loss"]["type_low"] == "constant")
+EXP_ATT_TYPE = {"crs_polyps": "share_rising", "allergic_rhinitis": "share_stable",
                 "osa": "share_rising", "tinnitus": "share_stable",
                 "vertigo": "share_stable", "cholesteatoma": "share_falling",
                 "cochlear_implant": "share_stable"}
@@ -533,10 +558,12 @@ def home(lang="en"):
 <h2>本站简介</h2>
 <p>耳鼻喉错配图谱站呈现一项预注册普查的结果：过去 30 年，耳鼻喉科（耳、鼻、喉医学）的
 研究关注度与疾病负担的对齐情况。发文量取自 Europe PMC，覆盖 14 个病区
-（1995–2024；可取回记录 {fnum(tot_records)} 条）；其中 7 个病区有匹配的全球疾病负担
+（1995–2024；按病区计记录 {fnum(tot_records)} 条，对应 {fnum(UNIQUE_PUBS)} 篇
+不重复发文）；其中 7 个病区有匹配的全球疾病负担
 （GBD）2023 病因，其产出与 DALY 负担（1995–2023）对置。四层测量在同一尺度上报告：
 发文份额动态、关注/负担比（ABR）、负担重心与研究重心之间的双重心距离，以及规则化
-脱钩分型。本设计在记录级数据拉取之前已经注册
+脱钩分型。本站全部数值均采用修订书 v1.2（2026 年 11 月 21 日）更正后的检索式
+（见<a href="methods.html">方法页</a>的更正说明）。本设计在记录级数据拉取之前已经注册
 （<a href="{OSF_URL}">OSF 注册，DOI {OSF_DOI}</a>）。</p>
 
 <div class="cards">
@@ -544,9 +571,9 @@ def home(lang="en"):
 <div class="lab">14 区池每五年的发文量，1995–99 → 2020–24</div></div>
 <div class="card"><div class="big">{pct(fc_first)} → {pct(fc_last)}</div>
 <div class="lab">五种头颈部癌症的合计池内份额</div></div>
-<div class="card"><div class="big">log2 ABR −1.05 → −1.47</div>
+<div class="card"><div class="big">log2 ABR −0.95 → −1.20</div>
 <div class="lab">听力损失：占池内 DALY 的 {pct(hl_daly)} vs 占池内发文的 {pct(hl_pub)}
-（2020–24 年 ABR 0.36）——最深且仍在扩大的缺口</div></div>
+（2020–24 年 ABR 0.43）——最深且仍在扩大的缺口</div></div>
 <div class="card"><div class="big">{pct(float(lmic['1995-1999']['lmic_share_all']))} → {pct(float(lmic['2020-2024']['lmic_share_all']))}</div>
 <div class="lab">第一作者中的低收入和中等收入国家份额（全部病区合并）；
 剔除中国后为 {pct(float(lmic['1995-1999']['lmic_share_excl_china']))} → {pct(float(lmic['2020-2024']['lmic_share_excl_china']))}</div></div>
@@ -556,23 +583,27 @@ def home(lang="en"):
 <div class="acards">
 {area_cards("zh")}
 </div>
-<p class="small">* 慢性鼻窦炎/鼻息肉：在仅由现代共识后术语构建的备用检索式下，份额下降
-发生翻转（+251.0%），应按术语迁移解读，而非研究量的下降（见
+<p class="small">* 慢性鼻窦炎/鼻息肉：本病区按三种检索式并报——更正后的主检索式下
+份额上升（+26.3%），原始检索式下下降（−26.6%），仅由现代共识后术语构建的备用检索式下
+上升 +251.0%；三者数的是三批不同的文献，其份额方向不作为头条结论（见
 <a href="areas/crs_polyps.html">CRS 病区页</a>与<a href="methods.html">方法页</a>）。</p>
 
 <h3>头条发现</h3>
 <ul>
 <li><b>份额向肿瘤方向轮转。</b>五种头颈部癌症合计占池份额由 {pct(fc_first)} 升至
-{pct(fc_last)}；喉癌逆其组而行（3.2% → 1.4%）。</li>
-<li><b>中耳炎份额缩小，产出未减。</b>其份额由 8.4% 降至 2.9%，而其五年产出由 2,229 篇
+{pct(fc_last)}，由口腔癌（5.1% → 10.3%）与甲状腺癌（11.0% → 14.5%）驱动；鼻咽癌
+近乎持平（5.8% → 6.4%），喉癌逆其组而行（4.7% → 1.9%）。</li>
+<li><b>中耳炎份额缩小，产出未减。</b>其份额由 9.2% 降至 3.3%，而其五年产出由 2,229 篇
 增至 3,706 篇——分母效应。</li>
 <li><b>听力损失是核心的水平发现。</b>它占七病因 DALY 池的 {pct(hl_daly)}，而只占同一池
-发文的 {pct(hl_pub)}，且缺口在 30 年间扩大（log2 ABR −1.05 → −1.47）。</li>
-<li><b>地理上方向趋同，水平未趋同。</b>负担—研究双重心距离在全部 7 个负担层病因上
-下降（−39% 至 −80%），但末期距离仍为 1,102–5,242 km。</li>
+发文的 {pct(hl_pub)}，且缺口在 30 年间扩大（log2 ABR −0.95 → −1.20）。</li>
+<li><b>地理上方向多趋同，水平未趋同。</b>负担—研究双重心距离在 7 个负担层病因中的
+6 个上下降（−14% 至 −80%）；鼻咽癌则由近及远（780 → 1,601 km，+105%）。末期距离
+仍为 1,081–5,957 km。</li>
 <li><b>分型：</b>中耳炎为解决稀释型（相对份额稀释——七个病因的绝对 DALY 均上升）；
-鼻咽癌与口腔癌在三套阈值下均为技术点燃型；听力损失在动态上为恒定型，但处于深度负水平
-（ABR 0.36）；喉癌、其他咽癌与甲状腺癌如实报为<i>未归型</i>，不硬塞入任何类型。</li>
+口腔癌在三套阈值下均为技术点燃型；听力损失在动态上为恒定型（三套阈值下均然），但处于
+深度负水平（ABR 0.43）；鼻咽癌、喉癌、其他咽癌与甲状腺癌如实报为<i>未归型</i>，
+不硬塞入任何类型。</li>
 </ul>
 <div class="caveat"><b>慢性鼻窦炎/鼻息肉。</b>{CRS_CAVEAT_ZH}</div>
 
@@ -592,12 +623,15 @@ def home(lang="en"):
 <p>The ENT Burden Atlas presents a preregistered census of how research attention in
 otolaryngology (ear, nose and throat medicine) has aligned with disease burden over
 30 years. Publications were counted in Europe PMC for 14 disease areas
-(1995–2024; {fnum(tot_records)} retrievable records); for the seven areas with a
+(1995–2024; {fnum(tot_records)} area-assigned records, corresponding to
+{fnum(UNIQUE_PUBS)} unique publications); for the seven areas with a
 matched Global Burden of Disease (GBD) 2023 cause, output is set against DALY
 burden (1995–2023). Four measurement layers are reported on one scale:
 publication-share dynamics, the attention–burden ratio (ABR), the geographic
 distance between burden and research centroids, and a rule-based decoupling
-typology. The design was registered before the record-level data were pulled
+typology. All values on this site use the corrected search formulations of
+Amendment v1.2 (21 November 2026); see the correction note on the
+<a href="methods.html">Methods page</a>. The design was registered before the record-level data were pulled
 (<a href="{OSF_URL}">OSF registration, DOI {OSF_DOI}</a>).</p>
 
 <div class="cards">
@@ -605,9 +639,9 @@ typology. The design was registered before the record-level data were pulled
 <div class="lab">Publications in the 14-area pool per five-year period, 1995–99 → 2020–24</div></div>
 <div class="card"><div class="big">{pct(fc_first)} → {pct(fc_last)}</div>
 <div class="lab">Combined pool share of the five head-and-neck cancers</div></div>
-<div class="card"><div class="big">log2 ABR −1.05 → −1.47</div>
+<div class="card"><div class="big">log2 ABR −0.95 → −1.20</div>
 <div class="lab">Hearing loss: {pct(hl_daly)} of pooled DALYs vs {pct(hl_pub)} of pooled publications
-(ABR 0.36 in 2020–24) — the deepest, still-widening deficit</div></div>
+(ABR 0.43 in 2020–24) — the deepest, still-widening deficit</div></div>
 <div class="card"><div class="big">{pct(float(lmic['1995-1999']['lmic_share_all']))} → {pct(float(lmic['2020-2024']['lmic_share_all']))}</div>
 <div class="lab">Low- and middle-income country share of first authors (all pooled areas);
 excluding China {pct(float(lmic['1995-1999']['lmic_share_excl_china']))} → {pct(float(lmic['2020-2024']['lmic_share_excl_china']))}</div></div>
@@ -617,29 +651,35 @@ excluding China {pct(float(lmic['1995-1999']['lmic_share_excl_china']))} → {pc
 <div class="acards">
 {area_cards()}
 </div>
-<p class="small">* CRS/polyps: the share decline reverses (+251.0%) under a backup
-query built only from modern post-consensus terminology and is read as terminology
-migration, not as a fall in research volume (see the
+<p class="small">* CRS/polyps: this area is reported under three formulations —
+its share rose (+26.3%) under the corrected primary formulation, fell (−26.6%)
+under the original formulation, and rose +251.0% under a backup formulation
+built only from modern post-consensus terminology. The three count three
+different literatures, so no share direction is carried as a headline (see the
 <a href="areas/crs_polyps.html">CRS area page</a> and <a href="methods.html">Methods</a>).</p>
 
 <h3>Headline findings</h3>
 <ul>
 <li><b>Shares rotated towards oncology.</b> The five head-and-neck cancers jointly rose
-from {pct(fc_first)} to {pct(fc_last)} of the pool; laryngeal cancer moved against its
-own group (3.2% → 1.4%).</li>
-<li><b>Otitis media shrank in share, not in output.</b> Its share fell from 8.4% to 2.9%
+from {pct(fc_first)} to {pct(fc_last)} of the pool, driven by oral cancer
+(5.1% → 10.3%) and thyroid cancer (11.0% → 14.5%); nasopharyngeal cancer was
+nearly flat (5.8% → 6.4%), and laryngeal cancer moved against its own group
+(4.7% → 1.9%).</li>
+<li><b>Otitis media shrank in share, not in output.</b> Its share fell from 9.2% to 3.3%
 while its five-year output grew from 2,229 to 3,706 papers — a denominator effect.</li>
 <li><b>Hearing loss is the central level finding.</b> It carries {pct(hl_daly)} of the
 seven-cause DALY pool against {pct(hl_pub)} of the same pool's publications, and the
-gap widened over 30 years (log2 ABR −1.05 → −1.47).</li>
-<li><b>Geography converged in direction, not in level.</b> The burden–research centroid
-distance fell for all seven burden-tier causes (−39% to −80%), yet last-period
-distances remain 1,102–5,242 km.</li>
+gap widened over 30 years (log2 ABR −0.95 → −1.20).</li>
+<li><b>Geography converged in direction for most causes, not in level.</b> The
+burden–research centroid distance fell for six of the seven burden-tier causes
+(−14% to −80%); nasopharyngeal cancer moved away, from a close start
+(780 → 1,601 km, +105%). Last-period distances remain 1,081–5,957 km.</li>
 <li><b>Typology:</b> otitis media is resolution-dilution (a relative share dilution —
-absolute DALYs rose for all seven causes); nasopharyngeal and oral cancer are
-technology-ignited under all three threshold sets; hearing loss is constant in
-dynamics at a deeply negative level (ABR 0.36); laryngeal, other pharyngeal and
-thyroid cancer are reported as <i>unclassified</i>, not forced into a type.</li>
+absolute DALYs rose for all seven causes); oral cancer is technology-ignited
+under all three threshold sets; hearing loss is constant in dynamics (under all
+three sets) at a deeply negative level (ABR 0.43); nasopharyngeal, laryngeal,
+other pharyngeal and thyroid cancer are reported as <i>unclassified</i>, not
+forced into a type.</li>
 </ul>
 <div class="caveat"><b>CRS/polyps.</b> {CRS_CAVEAT}</div>
 
@@ -705,7 +745,7 @@ def areas_page(lang="en"):
 </table>
 <div class="caveat">* 慢性鼻窦炎/鼻息肉：{CRS_CAVEAT_ZH}</div>
 <p class="small">听力损失的「恒定型」仅就动态而言；须与其水平一并读——2020–24 年
-ABR 0.36（log2 ABR −1.47）：稳定的错配，而非没有错配。本站任何地方的「解决」均指
+ABR 0.43（log2 ABR −1.20）：稳定的错配，而非没有错配。本站任何地方的「解决」均指
 池内相对份额稀释；七个负担层病因的年化绝对 DALY 均上升（+3.9% 至 +101.3%）。</p>
 """
         return page("病区", body, lang="zh", rel="areas.html")
@@ -723,7 +763,7 @@ quantity is computed or implied for them.</p>
 </table>
 <div class="caveat">* CRS/polyps: {CRS_CAVEAT}</div>
 <p class="small">Hearing loss is typed "constant" on dynamics only; read it together
-with its level, ABR 0.36 (log2 ABR −1.47) in 2020–24 — a stable misalignment, not an
+with its level, ABR 0.43 (log2 ABR −1.20) in 2020–24 — a stable misalignment, not an
 absence of one. "Resolution" anywhere on this site means relative share dilution
 inside the pool; annualised absolute DALYs rose for all seven burden-tier causes
 (+3.9% to +101.3%).</p>
@@ -763,10 +803,12 @@ def area_page(a):
     parts.append(f'<p>First-to-last share change: <b>{signed_pct(float(s["S_rel_pct"]))}</b> '
                  f'(relative). Dynamics label: <b>{escape(TYPE_LABEL[t["type_main"]])}</b>.</p>')
     if a == "crs_polyps":
-        parts.append(f'<div class="caveat">{CRS_CAVEAT} Under the primary query the '
-                     f'share fell {pct(share[(a, "1995-1999")])} → '
-                     f'{pct(share[(a, "2020-2024")])}; under the backup query it rose '
-                     f'1.51% → 5.31%.</div>')
+        parts.append(f'<div class="caveat">{CRS_CAVEAT} Under the corrected '
+                     f'primary formulation the share rose '
+                     f'{pct(share[(a, "1995-1999")])} → '
+                     f'{pct(share[(a, "2020-2024")])}; under the original '
+                     f'formulation it fell 8.54% → 6.27%; under the backup '
+                     f'formulation it rose 1.51% → 5.31%.</div>')
     if tier_burden:
         # ABR
         abr_vals = [float(abr[(a, p)]["log2_abr"]) for p in PERIODS]
@@ -791,8 +833,8 @@ def area_page(a):
         if a == "hearing_loss":
             parts.append('<div class="note">Hearing loss is typed <b>constant</b> on '
                          'dynamics only. Its level is the census\'s central level '
-                         'finding: ABR 0.36 in 2020–24 (log2 ABR −1.47), i.e. '
-                         '72.7% of pooled DALYs against 26.3% of pooled '
+                         'finding: ABR 0.43 in 2020–24 (log2 ABR −1.20), i.e. '
+                         '72.7% of pooled DALYs against 31.6% of pooled '
                          'publications, with the gap widening over 30 years.</div>')
         # centroid distance
         dvals = [float(dist[(a, p)]["distance_km"]) for p in PERIODS]
@@ -811,9 +853,15 @@ def area_page(a):
                      f'({km(dvals[0])} → {km(dvals[-1])} km). Last-period distances '
                      'remain large in absolute terms for every cause.</p>')
         if a == "nasopharynx_cancer":
-            parts.append('<p>The path is not monotone: the distance fell to 978 km '
-                         'in 2015–19 and rebounded to 2,467 km in 2020–24, the '
-                         'largest single-step reversal in this layer.</p>')
+            parts.append('<p>This is the one burden-tier cause whose distance '
+                         'widened: under the corrected formulation the research '
+                         'centroid started close to the East-Asian burden '
+                         'centre (780 km in 1995–99) and moved away, reaching '
+                         '1,601 km in 2020–24 (+105%). The apparent '
+                         'convergence and late rebound in the original '
+                         'retrieval were artefacts of non-cancer '
+                         'nasopharyngeal records (see Methods, correction '
+                         'note).</p>')
         if a == "thyroid_cancer":
             parts.append('<p>The final step rose slightly (1,674 → 1,756 km, '
                          '+82 km) after a steep fall.</p>')
@@ -822,7 +870,7 @@ def area_page(a):
         parts.append("<h3>First-author geography</h3>")
         parts.append(f'<p>LMIC share of parsed first-author records: '
                      f'<b>{pct(lm[0])} → {pct(lm[-1])}</b> (this area; pooled across '
-                     f'all 14 areas: 7.9% → 39.8%). Share of first authors located '
+                     f'all 14 areas: 7.8% → 40.6%). Share of first authors located '
                      f'in this cause\'s ten highest-DALY countries: '
                      f'<b>{pct(100 * float(ashare[(a, "1995-1999")]["top10_burden_share"]))} → '
                      f'{pct(100 * float(ashare[(a, "2020-2024")]["top10_burden_share"]))}</b>.</p>')
@@ -854,7 +902,7 @@ def area_page(a):
         parts.append("<h3>First-author geography</h3>")
         parts.append(f'<p>LMIC share of parsed first-author records: '
                      f'<b>{pct(lm[0])} → {pct(lm[-1])}</b> (this area; pooled across '
-                     f'all 14 areas: 7.9% → 39.8%).</p>')
+                     f'all 14 areas: 7.8% → 40.6%).</p>')
         tt = term[a]
         parts.append("<h3>Terminology sensitivity</h3>")
         parts.append(f'<p>Under a pre-frozen backup query, this area\'s share changed '
@@ -904,10 +952,10 @@ def area_page_zh(a):
     parts.append(f'<p>首末期份额变化：<b>{signed_pct(float(s["S_rel_pct"]))}</b>'
                  f'（相对）。动态标签：<b>{escape(TYPE_LABEL_ZH[t["type_main"]])}</b>。</p>')
     if a == "crs_polyps":
-        parts.append(f'<div class="caveat">{CRS_CAVEAT_ZH}主检索式下份额由 '
-                     f'{pct(share[(a, "1995-1999")])} 降至 '
-                     f'{pct(share[(a, "2020-2024")])}；备用检索式下则由 '
-                     f'1.51% 升至 5.31%。</div>')
+        parts.append(f'<div class="caveat">{CRS_CAVEAT_ZH}更正后的主检索式下份额由 '
+                     f'{pct(share[(a, "1995-1999")])} 升至 '
+                     f'{pct(share[(a, "2020-2024")])}；原始检索式下由 8.54% 降至 '
+                     f'6.27%；备用检索式下则由 1.51% 升至 5.31%。</div>')
     if tier_burden:
         abr_vals = [float(abr[(a, p)]["log2_abr"]) for p in PERIODS]
         parts.append("<h3>关注/负担比（ABR）</h3>")
@@ -930,9 +978,9 @@ def area_page_zh(a):
 </table>""")
         if a == "hearing_loss":
             parts.append('<div class="note">听力损失仅按动态归为<b>恒定型</b>。'
-                         '其水平才是本普查的核心水平发现：2020–24 年 ABR 0.36'
-                         '（log2 ABR −1.47），即占池内 DALY 的 72.7% 对占池内发文的 '
-                         '26.3%，且缺口在 30 年间扩大。</div>')
+                         '其水平才是本普查的核心水平发现：2020–24 年 ABR 0.43'
+                         '（log2 ABR −1.20），即占池内 DALY 的 72.7% 对占池内发文的 '
+                         '31.6%，且缺口在 30 年间扩大。</div>')
         dvals = [float(dist[(a, p)]["distance_km"]) for p in PERIODS]
         parts.append("<h3>负担—研究双重心距离</h3>")
         parts.append(spark(dvals, color="#0e7490", vfmt="{:,.0f}", lang="zh"))
@@ -948,8 +996,11 @@ def area_page_zh(a):
                      f'（{km(dvals[0])} → {km(dvals[-1])} km）。每个病因的末期距离'
                      '在绝对值上仍大。</p>')
         if a == "nasopharynx_cancer":
-            parts.append('<p>路径并非单调：距离在 2015–19 年降至 978 km，'
-                         '2020–24 年回升至 2,467 km，是本层最大的单步反转。</p>')
+            parts.append('<p>这是负担层中唯一距离扩大的病因：更正后的检索式下，'
+                         '研究重心起步即靠近东亚负担中心（1995–99 年 780 km），'
+                         '随后远离，2020–24 年达 1,601 km（+105%）。原始拉取中'
+                         '表面的趋同与末期回升是非癌鼻咽记录造成的假象'
+                         '（见方法页更正说明）。</p>')
         if a == "thyroid_cancer":
             parts.append('<p>最后一步在陡降之后小幅上升（1,674 → 1,756 km，'
                          '+82 km）。</p>')
@@ -957,7 +1008,7 @@ def area_page_zh(a):
         parts.append("<h3>第一作者地域</h3>")
         parts.append(f'<p>解析所得第一作者记录中 LMIC 所占份额：'
                      f'<b>{pct(lm[0])} → {pct(lm[-1])}</b>（本病区；14 区合并：'
-                     f'7.9% → 39.8%）。位于本病因 DALY 前十国家的第一作者份额：'
+                     f'7.8% → 40.6%）。位于本病因 DALY 前十国家的第一作者份额：'
                      f'<b>{pct(100 * float(ashare[(a, "1995-1999")]["top10_burden_share"]))} → '
                      f'{pct(100 * float(ashare[(a, "2020-2024")]["top10_burden_share"]))}</b>。</p>')
         parts.append("<h3>脱钩分型</h3>")
@@ -984,7 +1035,7 @@ def area_page_zh(a):
         parts.append("<h3>第一作者地域</h3>")
         parts.append(f'<p>解析所得第一作者记录中 LMIC 所占份额：'
                      f'<b>{pct(lm[0])} → {pct(lm[-1])}</b>（本病区；14 区合并：'
-                     f'7.9% → 39.8%）。</p>')
+                     f'7.8% → 40.6%）。</p>')
         tt = term[a]
         parts.append("<h3>术语敏感性</h3>")
         parts.append(f'<p>在一条预先冻结的备用检索式下，本病区的份额变化为 '
@@ -1014,26 +1065,49 @@ def methods_page(lang="en"):
 <p>本研究是一项描述性、分母型普查。先固定两个分母——14 区发文池，及其内的七病因
 负担池——一切数量均为池内构成。本方案、疾病池与分析层在记录级生产开始之前，已由
 签批的工作报告固定并在开放科学框架（OSF）上预注册
-（<a href="{OSF_URL}">注册 DOI {OSF_DOI}</a>）。一项修订有档可查：IHME 已退役
-GBD 2021，故修订书 v1.1 以 <b>GBD 2023</b> 替代（负担年份 1995–2023）。本研究只度量
+（<a href="{OSF_URL}">注册 DOI {OSF_DOI}</a>）。两项修订有档可查：IHME 已退役
+GBD 2021，故修订书 v1.1 以 <b>GBD 2023</b> 替代（负担年份 1995–2023）；修订书
+v1.2（2026 年 11 月 21 日）更正了五条检索式（见下「检索式更正」）。本研究只度量
 研究配置的构成关系；不作临床价值判断，也不主张任何疾病应获得多少研究。</p>
+
+<h3>检索式更正（修订书 v1.2，2026 年 11 月 21 日）</h3>
+<div class="caveat"><b>更正说明。</b>投稿前审核发现，最初冻结的两条检索式只用了
+解剖学术语、未带癌症限定词——「nasopharyngeal」与
+「oropharyngeal/hypopharyngeal」——因而数进了大量非癌文献。对原始检索式的抽样
+阳性预测值（PPV）审核（每区每层 60 条、按抽样前写定的规则分类）显示：鼻咽癌
+2020–2021 年层 PPV 仅 0.333（95% CI 0.227–0.459），其余年份 0.700；其他咽癌
+分别为 0.683 与 0.833。2020–2021 年鼻咽计数的尖峰主要是 COVID-19 时期的鼻咽
+采样文献，并非鼻咽癌研究。五条检索式据此按同一原则更正——部位概念加癌症限定词
+组，或仅用癌症专有短语：鼻咽癌与其他咽癌加上限定词；口腔癌补上其 GBD 病因名
+所要求的唇部表达（30 年净增 487 条）；喉癌补上 12 条此前缺失的癌症限定表达
+（净增 1,946 条，原式实为漏数）；CRS/鼻息肉去掉单独的「sinusitis」一词（经它
+进入的 8,934 条多为急性或一般性鼻窦炎，属另一实体）。其余九条逐词核查后不变。
+全普查已在更正后的语料上重算，本站全部数值均为更正口径；原始检索式及其产出
+保留在存档中，作为检索口径敏感性基线。原冻结结果不删除、不覆盖。</div>
 
 <h3>发文普查（L1）</h3>
 <p>发文量在 Europe PMC 中按每区一条冻结的题名/摘要检索式、逐年计数，覆盖
-1995–2024 年（420 个区—年单元），并汇总为六个五年期。L1 计数采用 Europe PMC 的
-hitCount 口径（392,458 条记录）。为地理层所做的记录级拉取共得 {fnum(tot_records)}
-条记录；其中两个分片各含一条「幽灵记录」——计入 hitCount 却从未被接口交付
-（D-1：口腔癌 2010–2014，4,806 vs 可取回 4,805；D-2：阻塞性睡眠呼吸暂停
-2015–2019，11,604 vs 11,603）。每条幽灵记录均在三项脚本核验通过后才被接受
-（标识符全唯一；复查时 hitCount 稳定；独立第二取回通道所得标识符集合相同），
-两条均逐项记入随存档发布的冻结差异记录。</p>
+1995–2024 年（420 个区—年单元），并汇总为六个五年期。主口径为修订书 v1.2
+更正后的检索式（五条更正、九条经核查不变，逐式列于下载页的检索式文件与映射表）。
+L1 计数采用 Europe PMC 的 hitCount 口径（357,712 条记录）。为地理层所做的记录级
+拉取共得 {fnum(tot_records)} 条按病区计记录，对应 {fnum(UNIQUE_PUBS)} 篇不重复
+发文（{fnum(MULTI_ASSIGNED)} 篇同属两区或以上）；五条更正检索式的记录于 2026 年
+11 月 21 日重新拉取（30 个分片、98,542 条，逐片可取回数与 hitCount 一致），其余
+九区保留 2026 年 11 月 9 日的拉取。一个分片含一条「幽灵记录」——计入 hitCount
+却从未被接口交付（D-2：阻塞性睡眠呼吸暂停 2015–2019，11,604 vs 11,603）。原始
+拉取中的另一条幽灵记录（D-1：口腔癌 2010–2014）在更正后的重新拉取中未再出现。
+每条幽灵记录均在三项脚本核验通过后才被接受（标识符全唯一；复查时 hitCount
+稳定；独立第二取回通道所得标识符集合相同），并逐项记入随存档发布的冻结差异
+记录。</p>
 
 <h3>国家解析（L3 生产）</h3>
 <p>{fnum(tot_aff)} 条记录带有第一作者机构信息
 （{pct(100 * tot_aff / tot_records, 2)}）。机构字符串经四层词典程序解析为国家或地区
 （机构与城市词典加消歧规则；不插补），成功解析 {fnum(tot_parsed)} 条
-（占带机构信息记录的 {pct(100 * tot_parsed / tot_aff, 2)}），覆盖 159 个国家或地区。
-90 条记录的人工核查未发现错误。作者所在国是发表机构的属性，不是研究人群的属性。</p>
+（占带机构信息记录的 {pct(100 * tot_parsed / tot_aff, 2)}），覆盖 157 个国家或地区。
+90 条记录的人工核查未检出错误（0/90；错误率的 95% 上限约 3.3%）。解析所得记录中
+最常见的第一作者国家为美国（69,049 条）、中国（47,959 条）与日本（16,947 条）。
+作者所在国是发表机构的属性，不是研究人群的属性。</p>
 
 <h3>负担数据（L2 输入）</h3>
 <p>GBD 2023 的 DALY（主口径）与患病数（敏感性口径），全年龄、双性别，全球汇总加
@@ -1059,7 +1133,9 @@ haversine 大圆距离（R = 6,371.0088 km）。估计量是在一段有档可�
 1995–99 年位于 82.0°N），因为第一作者分布环绕太平洋、其水平分量相互抵消；球面
 几何中位数避开了极点，但对鼻咽癌退化——两个重心吸附到同一国家中心，三个连续时期的
 距离塌缩为 0.0–0.3 km。三种估计量在全部 42 个病因—时期单元上并排冻结于随存档发布的
-估计量敏感性表中；三者对每个病因首末期距离变化的方向一致。</p>
+估计量敏感性表中。对未重新拉取的九个病区，三种估计量对每个病因首末期距离变化的
+方向一致；五个更正病区仅按主估计量（算术平均中心）重算，其更正后的距离以主估计量
+为准。</p>
 <p><b>作者份额。</b>LMIC 份额是解析所得记录中第一作者机构位于低收入或中等收入国家
 （世界银行低收入、下中等收入与上中等收入组别合并）的比例，并作剔除中国的分解。
 收入组别为 2026 年 11 月 12 日冻结的世界银行分类，<b>全部时期固定不变</b>——这是
@@ -1079,23 +1155,39 @@ A 为 ±0.5；±15%/±0.3 与 ±35%/±0.7 两套敏感性组别随每个归型�
 <h3>敏感性方案与裁定</h3>
 <ul>
 <li><b>滞后窗。</b>将末期发文与早 0、5 或 10 年的负担配对，未改变任何病因的
-log2 ABR 符号（7/7 在各滞后下相同）；漂移每五年步至多 0.136，全程至多 0.271。</li>
+末期 log2 ABR 符号（7/7 在各滞后下相同）。全时期网格中仅一格符号不稳：喉癌
+2005–2009 年在三种配对下为 +0.17 / +0.09 / −0.02，即在每种配对下均处于齐平
+附近，如实披露而不并入全称稳定结论。</li>
 <li><b>发文窗。</b>将末期发文限制于 2020–2023 年，使每个末期 log2 ABR 的移动
-小于 0.1，且无符号变化。</li>
-<li><b>负担口径。</b>患病口径在末期符号上与主口径七者中五者一致、在趋势方向上亦
-五者一致。符号例外为喉癌与中耳炎（听力损失占七病因患病池的 92.76%，压缩了其他
-份额）；趋势例外为其他咽癌与甲状腺癌，两者在两口径下均接近持平。两项头条水平
-结论——听力损失深度低于齐平、甲状腺癌为最大超额——在两口径下均成立。</li>
+小于 0.05，且无符号变化。</li>
+<li><b>负担口径。</b>患病口径在末期符号上与主口径七者中五者一致、在趋势方向上
+六者一致。符号例外为喉癌与中耳炎（听力损失占七病因患病池的 92.8%，压缩了其他
+份额并抬高了其比值）；趋势例外仅其他咽癌一例，两口径下均接近持平。两项头条水平
+结论——听力损失深度低于齐平、癌症超额在患病口径下更大而非更小——在两口径下
+均成立。</li>
 <li><b>术语漂移。</b>每个病区各设定一条备用检索式，并在取回任何备用计数之前以书面
-冻结。两个检索式在 15 行中 12 行的份额方向上一致。人工耳蜗与耳鸣仅在 ±5% 方向带
-两侧有别。<b>CRS/鼻息肉则完全翻转</b>（主式 −26.6% vs 备用式 +251.0%）：备用检索式
-只用 2003–2004 年共识术语之后才进入常规使用的现代术语，因此在结构上看不见
-鼻窦炎时代的文献。该翻转按术语迁移解读，并依方案的双式规则，CRS 份额下降撤出
-头条结论。</li>
+冻结。更正后的主检索式与备用检索式在 15 行（14 区加五癌合计行）中 13 行的份额
+方向上一致；不一致的两行是人工耳蜗（主式 +1.8% vs 备用式 −9.7%）与耳鸣
+（+6.4% vs −5.8%，纯分母效应）。<b>CRS/鼻息肉按三式并报</b>（更正主式 +26.3%；
+原始式 −26.6%；备用式 +251.0%）：备用检索式只用 2003–2004 年共识术语之后才
+进入常规使用的现代术语，因此在结构上看不见鼻窦炎时代的文献。三式数的是三批
+不同的文献，依方案的双式规则，CRS 的份额方向不作为头条结论。</li>
+<li><b>多重赋值口径。</b>记录级数量在三种口径下重算：按病区计（主口径）、分数
+权重（每篇按 1/k 分摊）与单赋值子集。七个病因的末期 ABR 符号在三种口径下全部
+不变；中耳炎在单赋值子集下更正口径为 +0.22（原始语料下曾为 −0.23）。</li>
+<li><b>历史收入分类。</b>按每期首年当时有效的世界银行分类重分类，LMIC 份额升为
+10.5% → 41.7%（固定分类：7.8% → 40.6%），剔除中国后为 7.8% → 17.9%
+（固定分类：5.1% → 16.8%）；早期水平的分类依赖性与上升本身的稳健性并报。</li>
+<li><b>检索口径。</b>全部主量在原始（宽式）检索式下重算，与更正口径并置：鼻咽癌
+的份额激增消失（+61.6% → +10.6%），其末期 ABR 由 5.94 降至 2.98，分型由三套
+阈值下均为技术点燃型变为均为未归型，双重心距离由 −48% 收缩（带末期回升）变为
++105% 扩大；喉癌则反向更正（首期 log2 ABR −0.18 → +0.35）。不涉及更正病区的
+每条头条在两种口径下方向均不变。</li>
 </ul>
 <p class="small">滞后窗与术语分析于 2026 年 11 月 12 日在主层冻结之后完成；备用
-检索式在其计数存在之前已固定。它们作为方案敏感性方案在分析阶段的完成情况报告，
-而非原始预注册时间戳的组成部分。</p>
+检索式在其计数存在之前已固定。多重赋值与历史收入分类于 2026 年 11 月 13 日在
+修订阶段完成；检索口径敏感性于 2026 年 11 月 21 日依修订书 v1.2 完成。它们作为
+方案敏感性方案在各阶段的完成情况报告，而非原始预注册时间戳的组成部分。</p>
 
 <h3>大型语言模型的使用</h3>
 <p>本项目中，大型语言模型被用作辅助工具：用于分析代码的开发与调试、分析管线的
@@ -1112,24 +1204,61 @@ first — a 14-area publication pool and, inside it, a seven-cause burden pool �
 and every quantity is a composition within them. The protocol, disease pool and
 analysis layers were fixed in a signed work report and preregistered on the Open
 Science Framework before record-level production began
-(<a href="{OSF_URL}">registration DOI {OSF_DOI}</a>). One amendment is documented:
-the Institute for Health Metrics and Evaluation retired GBD 2021, so Amendment
-v1.1 substituted <b>GBD 2023</b> (burden years 1995–2023). The study measures the
+(<a href="{OSF_URL}">registration DOI {OSF_DOI}</a>). Two amendments are
+documented: the Institute for Health Metrics and Evaluation retired GBD 2021,
+so Amendment v1.1 substituted <b>GBD 2023</b> (burden years 1995–2023); and
+Amendment v1.2 (21 November 2026) corrected five search formulations (see
+"Formulation correction" below). The study measures the
 configuration of research allocation only; it makes no clinical-value judgement
 and no claim about how much research any disease deserves.</p>
+
+<h3>Formulation correction (Amendment v1.2, 21 November 2026)</h3>
+<div class="caveat"><b>Correction note.</b> A pre-submission audit found that
+two of the originally frozen formulations used anatomy terms alone, with no
+cancer limiter — "nasopharyngeal" and "oropharyngeal/hypopharyngeal" — and so
+counted large amounts of non-cancer literature. A sampled
+positive-predictive-value (PPV) audit of the original formulations (60 records
+per stratum per area, classified under rules written before sampling) gave,
+for nasopharyngeal cancer, PPV 0.333 (95% CI 0.227–0.459) in 2020–2021 and
+0.700 in other years; for other pharyngeal cancer, 0.683 and 0.833. The
+2020–2021 nasopharyngeal spike was predominantly COVID-19-era nasopharyngeal
+sampling literature, not nasopharyngeal cancer research. Five formulations
+were therefore corrected under one principle — a site concept combined with a
+cancer limiter set, or cancer-specific phrases only: nasopharyngeal and other
+pharyngeal cancer gained the limiter; oral cancer gained the lip expressions
+its GBD cause name requires (+487 records over 30 years, previously counted
+nowhere); laryngeal cancer gained twelve cancer-limited expressions it had
+been missing (+1,946 records, +24.9% — an undercount in the opposite
+direction); and CRS/polyps dropped the standalone term "sinusitis", through
+which 8,934 predominantly acute or general sinusitis records — a different
+entity — had entered a chronic-disease area. The remaining nine formulations
+were checked term by term and left unchanged. The census was recomputed in
+full on the corrected corpus, and every value on this site is on the
+corrected basis; the original formulations and their outputs are retained in
+the archive as the query-basis sensitivity. The original frozen results were
+not deleted or overwritten.</div>
 
 <h3>Publication census (L1)</h3>
 <p>Publications were counted in Europe PMC under one frozen title/abstract query
 per area, per year, 1995–2024 (420 area–year cells), and aggregated into six
-five-year periods. The L1 counts use the Europe PMC hitCount basis
-(392,458 records). Record-level retrieval for the geographic layer delivered
-{fnum(tot_records)} records; two parts each contained one "phantom" record —
-counted in the hitCount but never delivered (D-1: oral cancer 2010–2014,
-4,806 vs 4,805 retrievable; D-2: obstructive sleep apnoea 2015–2019,
-11,604 vs 11,603). Each was accepted only after three scripted checks passed
-(unique identifiers; stable hitCount on re-query; identical identifier sets from
-an independent second retrieval channel) and both are itemised in a frozen
-discrepancy record shipped with the archive.</p>
+five-year periods. The primary basis is the corrected formulation set of
+Amendment v1.2 (five formulations corrected, nine checked and unchanged;
+each formulation is listed in the query file and mapping table on the
+Downloads page). The L1 counts use the Europe PMC hitCount basis
+(357,712 records). Record-level retrieval for the geographic layer delivered
+{fnum(tot_records)} area-assigned records, corresponding to
+{fnum(UNIQUE_PUBS)} unique publications ({fnum(MULTI_ASSIGNED)} assigned to
+two or more areas); retrieval for the five corrected areas was repeated on
+21 November 2026 (30 parts, 98,542 records, retrievable equal to hitCount in
+every part), and the nine unchanged areas retain their 9 November 2026
+retrieval. One part contained one "phantom" record — counted in the hitCount
+but never delivered (D-2: obstructive sleep apnoea 2015–2019, 11,604 vs
+11,603). A second phantom in the original retrieval (D-1: oral cancer
+2010–2014) did not recur in the corrected re-retrieval. Each phantom was
+accepted only after three scripted checks passed (unique identifiers; stable
+hitCount on re-query; identical identifier sets from an independent second
+retrieval channel), and both are itemised in a frozen discrepancy record
+shipped with the archive.</p>
 
 <h3>Country parsing (L3 production)</h3>
 <p>A first-author affiliation was present for {fnum(tot_aff)} records
@@ -1137,9 +1266,11 @@ discrepancy record shipped with the archive.</p>
 country or region by a four-layer dictionary procedure (institution and city
 dictionaries with disambiguation rules; no imputation), succeeding for
 {fnum(tot_parsed)} records ({pct(100 * tot_parsed / tot_aff, 2)} of those with an
-affiliation) across 159 countries or regions. A 90-record manual audit found no
-errors. Author country is a property of the publishing institution, not of the
-study population.</p>
+affiliation) across 157 countries or regions. A 90-record manual audit detected
+no errors (0 of 90; 95% upper bound for the error rate ≈ 3.3%). The most
+frequent first-author countries among parsed records were the United States
+(69,049 records), China (47,959) and Japan (16,947). Author country is a
+property of the publishing institution, not of the study population.</p>
 
 <h3>Burden data (L2 inputs)</h3>
 <p>GBD 2023 DALYs (primary) and prevalence (sensitivity calibre), all ages, both
@@ -1176,8 +1307,11 @@ horizontal components cancel; the spherical geometric median avoided the pole
 but degenerated for nasopharyngeal cancer, both centroids snapping to the same
 country centre and the distance collapsing to 0.0–0.3 km for three consecutive
 periods. All three estimators are frozen side by side for all 42 cause–period
-cells in the estimator-sensitivity table shipped with the archive; all three
-agree on the direction of every first-to-last distance change.</p>
+cells in the estimator-sensitivity table shipped with the archive. For the
+nine areas whose retrieval was not repeated, all three estimators agree on
+the direction of every first-to-last distance change; the five corrected
+areas were recomputed under the primary (arithmetic mean centre) estimator
+only, and their corrected distances rest on that estimator.</p>
 <p><b>Author shares.</b> The LMIC share is the proportion of parsed records
 whose first author is affiliated in a low- or middle-income country (World Bank
 low-, lower-middle- and upper-middle-income groups combined), with a
@@ -1206,33 +1340,64 @@ type names are shape labels, not mechanism claims.</p>
 <h3>Sensitivity programme and verdicts</h3>
 <ul>
 <li><b>Lag window.</b> Pairing last-period publications with burden 0, 5 or 10
-years earlier changed no cause's log2 ABR sign (7/7 identical across lags);
-drift is at most 0.136 per five-year step and 0.271 over the full span.</li>
+years earlier changed no cause's last-period log2 ABR sign (7/7 identical
+across lags). Across the full per-period grid, one cell is not sign-stable:
+laryngeal cancer in 2005–2009 sits at +0.17 / +0.09 / −0.02 across the three
+lags — at parity under every pairing — and is disclosed as such rather than
+absorbed into a blanket stability claim.</li>
 <li><b>Publication window.</b> Restricting last-period publications to
-2020–2023 moved each last-period log2 ABR by less than 0.1, with no sign
+2020–2023 moved each last-period log2 ABR by less than 0.05, with no sign
 change.</li>
 <li><b>Burden calibre.</b> The prevalence calibre agrees with the primary
-calibre on five of seven last-period signs and five of seven trend directions.
+calibre on five of seven last-period signs and six of seven trend directions.
 The sign exceptions are laryngeal cancer and otitis media (hearing loss is
-92.76% of the seven-cause prevalence pool, which compresses the other shares);
-the trend exceptions are other pharyngeal and thyroid cancer, both near-flat
-in both calibres. The two headline level claims — hearing loss deeply below
-parity and thyroid cancer at the largest excess — hold in both calibres.</li>
+92.8% of the seven-cause prevalence pool, which compresses the other shares
+towards zero and inflates their ratios); the trend exception is other
+pharyngeal cancer alone, near-flat in both calibres. The headline level
+claims hold in kind in both calibres: hearing loss is the most negative
+value under prevalence, and the cancer excesses are larger, not smaller.</li>
 <li><b>Terminology drift.</b> For each area, one backup query was specified and
-frozen in writing before any backup count was retrieved. The two queries agree
-on share direction for 12 of the 15 rows. Cochlear implants and tinnitus differ
-only across the ±5% direction band. <b>CRS/polyps reverses outright</b>
-(−26.6% primary vs +251.0% backup): the backup query uses only modern terms
-that entered routine use after the 2003–2004 consensus terminology, so it is
-structurally blind to the sinusitis-era literature. The reversal is read as
-terminology migration, and under the protocol's two-query rule the CRS share
-decline is withdrawn as a headline conclusion.</li>
+frozen in writing before any backup count was retrieved. The corrected
+primary and backup formulations agree on share direction for 13 of the 15
+rows (14 areas plus the five-cancer combination). The two disagreements are
+cochlear implants (primary +1.8% vs backup −9.7%) and tinnitus (+6.4% vs
+−5.8%, a pure denominator effect). <b>CRS/polyps is reported under three
+formulations</b> (corrected primary +26.3%; original −26.6%; backup
++251.0%): the backup formulation uses only modern terms that entered routine
+use after the 2003–2004 consensus terminology, so it is structurally blind
+to the sinusitis-era literature. The three formulations count three
+different literatures, and under the protocol's two-formulation rule no CRS
+share-direction claim is carried as a headline conclusion.</li>
+<li><b>Multi-assignment bases.</b> The record-level quantities were
+recomputed under fractional weights (each publication contributing 1/k to
+each of its k areas) and on the single-assignment subset. All seven causes
+keep their last-period ABR signs under all three bases; otitis media's
+single-assignment value is +0.22 on the corrected corpus (it was −0.23 on
+the original corpus).</li>
+<li><b>Historical income classification.</b> Reclassifying each period by the
+World Bank classification in force at its first year raises the LMIC series
+to 10.5% → 41.7% (fixed classification: 7.8% → 40.6%), and the
+excluding-China series to 7.8% → 17.9% (fixed: 5.1% → 16.8%). The
+early-period level is classification-dependent; the rise is not.</li>
+<li><b>Query basis.</b> Every primary quantity was recomputed under the
+original (broad) formulations and set against the corrected basis. The
+nasopharyngeal share surge disappears (+61.6% original vs +10.6%
+corrected); its last-period ABR falls from 5.94 to 2.98; its typology
+assignment changes from technology-ignited under all threshold sets to
+unclassified under all sets; and its centroid distance changes sign, from a
+48% contraction with a final-period rebound to a 105% widening from a close
+start. Laryngeal cancer corrects in the opposite direction (first-period
+log2 ABR −0.18 → +0.35). Every headline not involving the corrected areas
+is unchanged in direction on both bases.</li>
 </ul>
 <p class="small">The lag-window and terminology analyses were completed on
 12 November 2026, after the primary layers were frozen; the backup queries were
-fixed before their counts existed. They are reported as completions of the
-protocol's sensitivity programme at the analysis stage, not as elements of the
-original preregistration timestamp.</p>
+fixed before their counts existed. The multi-assignment and historical-income
+analyses were completed on 13 November 2026 at the revision stage, and the
+query-basis analysis on 21 November 2026 under Amendment v1.2. They are
+reported as completions of the protocol's sensitivity programme at their
+respective stages, not as elements of the original preregistration
+timestamp.</p>
 
 <h3>Use of large language models</h3>
 <p>Large language models were used as assistive tools in this project: for
@@ -1259,60 +1424,62 @@ def findings_page(lang="en"):
 <h3>1. 发文池扩大约五倍，并向肿瘤轮转</h3>
 <p>14 区池由 1995–99 年的 {fnum(pool['1995-1999'])} 篇增至 2020–24 年的
 {fnum(pool['2020-2024'])} 篇。五种头颈部癌症合计占池份额由 {pct(fc_first)} 升至
-{pct(fc_last)}，由鼻咽癌（8.3% → 13.4%）、口腔癌（4.5% → 8.9%）与甲状腺癌
-（10.1% → 12.7%）驱动。喉癌逆其组而行（3.2% → 1.4%）：这一轮转与其说是转向肿瘤，
-不如说同样是肿瘤内部的轮转。</p>
+{pct(fc_last)}，由口腔癌（5.1% → 10.3%）与甲状腺癌（11.0% → 14.5%）驱动，
+其他咽癌次之（4.1% → 5.5%）；鼻咽癌近乎持平（5.8% → 6.4%）。喉癌逆其组而行
+（4.7% → 1.9%）：这一轮转与其说是转向肿瘤，不如说同样是肿瘤内部的轮转。</p>
 
 <h3>2. 中耳炎份额缩小，产出未减</h3>
-<p>其池内份额由 8.4% 降至 2.9%，而五年产出由 2,229 篇升至 3,706 篇——典型的
+<p>其池内份额由 9.2% 降至 3.3%，而五年产出由 2,229 篇升至 3,706 篇——典型的
 分母效应：仍在增长的病区被增长更快的邻居稀释。</p>
 
 <h3>3. 听力损失是核心水平发现</h3>
 <p>2020–24 年，听力损失占七病因 DALY 池的 {pct(hl_daly)}，而只占同一池发文的
-{pct(hl_pub)}——约为其负担份额在成比例情形下所对应发文份额的三分之一。其
-log2 ABR 由 −1.05 加深至 −1.47（ABR 0.48 → 0.36），是首期已在齐平线以下、末期
-进一步下沉的唯一病因。喉癌自上方加入（−0.18 → −1.18）。另一端，甲状腺癌全程
-保持池内最大超额（+3.05 → +3.24；末期 ABR ≈ 9.45）。</p>
+{pct(hl_pub)}——约为其负担份额在成比例情形下所对应发文份额的五分之二。其
+log2 ABR 由 −0.95 加深至 −1.20（ABR 0.52 → 0.43），是首期已在齐平线以下、末期
+进一步下沉的唯一病因。喉癌自上方加入（+0.35 → −0.67）。另一端，甲状腺癌全程
+保持池内最大超额（+3.15 → +3.51；末期 ABR ≈ 11.37）。</p>
 
-<h3>4. 地理：方向趋同，水平未趋同</h3>
-<p>DALY 加权负担重心与第一作者研究重心之间的距离，在全部七个负担层病因上下降
-（首末期之间 −39% 至 −80%）。末期距离在绝对值上仍大——1,102 至 5,242 km：每个
-病因的研究中心仍位于与其负担中心不同的地图区域。路径并不都平滑：鼻咽癌的距离
-在 2015–19 年降至 978 km，随后回升至 2,467 km。详见
+<h3>4. 地理：方向多趋同，水平未趋同</h3>
+<p>DALY 加权负担重心与第一作者研究重心之间的距离，在七个负担层病因中的六个上
+下降（首末期之间 −14% 至 −80%）。末期距离在绝对值上仍大——1,081 至 5,957 km：
+每个病因的研究中心仍位于与其负担中心不同的地图区域。唯一的例外是鼻咽癌：其
+研究本来就集中在东亚负担中心附近（首期 780 km），随后远离至 1,601 km
+（+105%）。分解显示，距离变化全部来自研究侧移动——30 年间各病因的负担重心
+总移动仅 300–1,088 km，研究重心则移动 1,374–8,158 km。详见
 <a href="geography.html">地理页</a>。</p>
 
 <h3>5. 作者基础展宽</h3>
 <p>全部病区合并，第一作者中的低收入和中等收入国家（LMIC）份额由 1995–99 年的
-7.9% 升至 2020–24 年的 39.8%。这一上升多由中国贡献（占全部解析记录的
-2.5% → 21.9%），但并非全部：剔除中国后，LMIC 占全部解析记录的份额仍由 5.4%
-升至 17.9%。</p>
+7.8% 升至 2020–24 年的 40.6%。这一上升多由中国贡献（占全部解析记录的
+2.7% → 23.8%），但并非全部：剔除中国后，LMIC 占全部解析记录的份额仍由 5.1%
+升至 16.8%。</p>
 
-<h3>6. 分型：两个稳健型、一个稳定错配、三个未归型</h3>
+<h3>6. 分型：一个稳健技术点燃型、一个稳定错配、四个未归型</h3>
 <p>在规则化脱钩分型下，中耳炎为解决稀释型（仅为相对份额稀释——七个病因的年化
-绝对 DALY 均上升）。鼻咽癌与口腔癌为技术点燃型，是三套阈值下归型不变的仅有的
-两个。听力损失仅按动态归为<b>恒定型</b>，必须与其水平一并读——2020–24 年
-ABR 0.36，池内最深缺口：稳定的错配，而非没有错配。喉癌、其他咽癌与甲状腺癌在
-主阈值下不合任何规则，如实报为<i>未归型</i>，不硬塞入任何类型。详见
-<a href="typology.html">分型页</a>。</p>
+绝对 DALY 均上升）。口腔癌为技术点燃型，且在三套阈值下归型不变。听力损失仅按
+动态归为<b>恒定型</b>（三套阈值下均然），必须与其水平一并读——2020–24 年
+ABR 0.43，池内最深缺口：稳定的错配，而非没有错配。鼻咽癌、喉癌、其他咽癌与
+甲状腺癌在主阈值下不合任何规则，如实报为<i>未归型</i>，不硬塞入任何类型。
+详见<a href="typology.html">分型页</a>。</p>
 
-<div class="caveat"><b>慢性鼻窦炎/鼻息肉。</b>{CRS_CAVEAT_ZH}因此，CRS 份额下降
-不计入上述头条发现。</div>
+<div class="caveat"><b>慢性鼻窦炎/鼻息肉。</b>{CRS_CAVEAT_ZH}因此，CRS 的份额
+方向不计入上述头条发现。</div>
 
 <h3>预注册预期记分卡</h3>
 <table>
 <tr><th class="l">预期（按注册原文）</th><th class="l">裁定</th><th class="l">数据所示</th></tr>
 <tr><td class="l">（1）经典感染性疾病的发文份额将下降，但绝对产出不降。</td>
 <td class="l"><span class="verdict">完全符合</span></td>
-<td class="l">中耳炎即典型案例：份额 8.4% → 2.9%；产出每期 2,229 → 3,706 篇。</td></tr>
+<td class="l">中耳炎即典型案例：份额 9.2% → 3.3%；产出每期 2,229 → 3,706 篇。</td></tr>
 <tr><td class="l">（2）负担正向低收入地区迁移，而研究地理不跟随。</td>
 <td class="l"><span class="verdict">大体不成立</span></td>
-<td class="l">研究地理实际上跟随了：七个病因的重心距离在三种估计量下全部收缩，第一作者 LMIC 份额由 7.9% 升至 39.8%。该预期仅以其水平形式存留——剩余距离仍为 1,102–5,242 km。</td></tr>
+<td class="l">研究地理实际上跟随了：七个病因中六个的重心距离收缩，第一作者 LMIC 份额由 7.8% 升至 40.6%。该预期仅以其水平形式存留——剩余距离仍为 1,081–5,957 km；且有一个病因（鼻咽癌）的研究地理反向远离其负担。</td></tr>
 <tr><td class="l">（3）份额增益将集中于有治疗或技术变迁标记的疾病。</td>
 <td class="l"><span class="verdict">一半符合</span></td>
-<td class="l">头颈部癌症符合该预期。阻塞性睡眠呼吸暂停是最清晰的技术关联病区，其份额只上升了一步便进入平台期，2005 年以来每年的份额都约为 12–13%。原先系于该预期的 CRS 一点，现按术语迁移解读（见上注），不作为生物制剂时代任何方向的证据。</td></tr>
+<td class="l">头颈部癌症符合该预期。阻塞性睡眠呼吸暂停是最清晰的技术关联病区，其份额只上升了一步便进入平台期，2005 年以来每年的份额都约为 13–15%。原先系于该预期的 CRS 一点，现按三式并报处理（见上注），不作为生物制剂时代任何方向的证据。</td></tr>
 </table>
 <p class="small">一全符合、一大体落空、一半符合——这正是预注册描述性研究应当发表的
-记分卡；落空的预期（2）反而是信息量更大的结果，因为它排除了本专科「研究忽视
+记分卡；落空的预期（2）反而是信息量更大的结果，因为它并不支持本专科「研究忽视
 负担迁移」叙事的最简单版本。</p>
 """
         return page("头条结论", body, lang="zh", rel="findings.html")
@@ -1327,56 +1494,61 @@ importance.</p>
 <h3>1. The pool grew fivefold and rotated towards oncology</h3>
 <p>The 14-area pool grew from {fnum(pool['1995-1999'])} publications in 1995–99
 to {fnum(pool['2020-2024'])} in 2020–24. The five head-and-neck cancers jointly
-rose from {pct(fc_first)} to {pct(fc_last)} of the pool, driven by
-nasopharyngeal cancer (8.3% → 13.4%), oral cancer (4.5% → 8.9%) and thyroid
-cancer (10.1% → 12.7%). Laryngeal cancer moved against its own group
-(3.2% → 1.4%): the rotation is within oncology as much as towards it.</p>
+rose from {pct(fc_first)} to {pct(fc_last)} of the pool, driven by oral cancer
+(5.1% → 10.3%) and thyroid cancer (11.0% → 14.5%), with other pharyngeal
+cancer next (4.1% → 5.5%); nasopharyngeal cancer was nearly flat
+(5.8% → 6.4%). Laryngeal cancer moved against its own group (4.7% → 1.9%):
+the rotation is within oncology as much as towards it.</p>
 
 <h3>2. Otitis media shrank in share, not in output</h3>
-<p>Its pool share fell from 8.4% to 2.9% while its five-year output rose from
+<p>Its pool share fell from 9.2% to 3.3% while its five-year output rose from
 2,229 to 3,706 publications — a textbook denominator effect, in which a
 still-growing area is diluted by faster-growing neighbours.</p>
 
 <h3>3. Hearing loss is the central level finding</h3>
 <p>In 2020–24 hearing loss carried {pct(hl_daly)} of the seven-cause DALY pool
-against {pct(hl_pub)} of the same pool's publications — roughly one-third of
+against {pct(hl_pub)} of the same pool's publications — well under half of
 the publication share its burden share would imply under proportionality. Its
-log2 ABR deepened from −1.05 to −1.47 (ABR 0.48 → 0.36), the only cause below
+log2 ABR deepened from −0.95 to −1.20 (ABR 0.52 → 0.43), the only cause below
 parity in the first period that ended further below it. Laryngeal cancer
-joined it from above (−0.18 → −1.18). At the other end, thyroid cancer held
-the pool's largest excess throughout (+3.05 → +3.24; ABR ≈ 9.45 in the last
+joined it from above (+0.35 → −0.67). At the other end, thyroid cancer held
+the pool's largest excess throughout (+3.15 → +3.51; ABR ≈ 11.37 in the last
 period).</p>
 
-<h3>4. Geography converged in direction, not in level</h3>
+<h3>4. Geography converged in direction for most causes, not in level</h3>
 <p>The distance between the DALY-weighted burden centroid and the
-first-author research centroid fell for all seven burden-tier causes
-(−39% to −80% between the first and last periods). Last-period distances
-remain large in absolute terms — 1,102 to 5,242 km: the research centre of
+first-author research centroid fell for six of the seven burden-tier causes
+(−14% to −80% between the first and last periods). Last-period distances
+remain large in absolute terms — 1,081 to 5,957 km: the research centre of
 every cause still sits on a different part of the map from its burden centre.
-The paths are not all smooth: nasopharyngeal cancer's distance fell to 978 km
-in 2015–19 and then rebounded to 2,467 km. Detail on the
+The one exception is nasopharyngeal cancer: its research was always
+concentrated near the East-Asian burden centre (780 km in the first period)
+and moved away, to 1,601 km (+105%). A movement decomposition shows that all
+of the distance change is research-side movement — over 30 years each
+cause's burden centroid moved only 300–1,088 km in total, while its research
+centroid moved 1,374–8,158 km. Detail on the
 <a href="geography.html">Geography page</a>.</p>
 
 <h3>5. The authorship base broadened</h3>
 <p>The low- and middle-income country (LMIC) share of first authors across
-the pooled areas rose from 7.9% in 1995–99 to 39.8% in 2020–24. China
-accounts for much of the rise (2.5% → 21.9% of all parsed records) but not
+the pooled areas rose from 7.8% in 1995–99 to 40.6% in 2020–24. China
+accounts for much of the rise (2.7% → 23.8% of all parsed records) but not
 all of it: excluding China, the LMIC share of all parsed records still rose
-from 5.4% to 17.9%.</p>
+from 5.1% to 16.8%.</p>
 
-<h3>6. Typology: two robust types, one stable misalignment, three unclassified</h3>
+<h3>6. Typology: one robust technology-ignited type, one stable misalignment, four unclassified</h3>
 <p>Under the rule-based decoupling typology, otitis media is
 resolution-dilution (a relative share dilution only — annualised absolute
-DALYs rose for all seven causes). Nasopharyngeal and oral cancer are
-technology-ignited, the only two assignments unchanged under all three
-threshold sets. Hearing loss is typed <b>constant</b> on dynamics only, and
-must be read together with its level — ABR 0.36 in 2020–24, the pool's
-deepest deficit: a stable misalignment, not an absence of one. Laryngeal,
-other pharyngeal and thyroid cancer match no rule under the main thresholds
-and are reported as <i>unclassified</i>, not forced into a type. Detail on
-the <a href="typology.html">Typology page</a>.</p>
+DALYs rose for all seven causes). Oral cancer is technology-ignited, its
+assignment unchanged under all three threshold sets. Hearing loss is typed
+<b>constant</b> on dynamics only (under all three sets), and must be read
+together with its level — ABR 0.43 in 2020–24, the pool's deepest deficit: a
+stable misalignment, not an absence of one. Nasopharyngeal, laryngeal, other
+pharyngeal and thyroid cancer match no rule under the main thresholds and
+are reported as <i>unclassified</i>, not forced into a type. Detail on the
+<a href="typology.html">Typology page</a>.</p>
 
-<div class="caveat"><b>CRS/polyps.</b> {CRS_CAVEAT} The CRS share decline is
+<div class="caveat"><b>CRS/polyps.</b> {CRS_CAVEAT} The CRS share direction is
 therefore not counted among the headline findings above.</div>
 
 <h3>The preregistered expectations, scored</h3>
@@ -1384,19 +1556,19 @@ therefore not counted among the headline findings above.</div>
 <tr><th class="l">Expectation (as registered)</th><th class="l">Verdict</th><th class="l">What the data show</th></tr>
 <tr><td class="l">(1) Classic infectious diseases will fall in publication share but not in absolute output.</td>
 <td class="l"><span class="verdict">Fully matched</span></td>
-<td class="l">Otitis media is the textbook case: share 8.4% → 2.9%; output 2,229 → 3,706 publications per period.</td></tr>
+<td class="l">Otitis media is the textbook case: share 9.2% → 3.3%; output 2,229 → 3,706 publications per period.</td></tr>
 <tr><td class="l">(2) Burden is shifting towards lower-income regions while research geography does not follow.</td>
 <td class="l"><span class="verdict">Largely not supported</span></td>
-<td class="l">Research geography did follow: centroid distances contracted for all seven causes under all three estimators, and the LMIC first-author share rose 7.9% → 39.8%. The expectation survives only in its level form — the remaining distances are still 1,102–5,242 km.</td></tr>
+<td class="l">Research geography did follow: centroid distances contracted for six of the seven causes, and the LMIC first-author share rose 7.8% → 40.6%. The expectation survives only in its level form — the remaining distances are still 1,081–5,957 km — and one cause's research geography (nasopharyngeal cancer) moved away from its burden.</td></tr>
 <tr><td class="l">(3) Share gains will concentrate in diseases marked by treatment or technology shifts.</td>
 <td class="l"><span class="verdict">Half matched</span></td>
-<td class="l">The head-and-neck cancers fit the expectation. Obstructive sleep apnoea, the clearest technology-associated area, rose once and then plateaued, its yearly share sitting at roughly 12–13% in every year since 2005. The CRS point originally attached to this expectation is now read as terminology migration (caveat above), not as evidence about the biologics era either way.</td></tr>
+<td class="l">The head-and-neck cancers fit the expectation. Obstructive sleep apnoea, the clearest technology-associated area, rose once and then plateaued, its yearly share sitting at roughly 13–15% in every year since 2005. The CRS point originally attached to this expectation is now reported under three formulations (caveat above), not as evidence about the biologics era either way.</td></tr>
 </table>
 <p class="small">A scorecard of one full, one largely failed and one half is
 what a preregistered descriptive study should expect to publish; the failed
-expectation (2) is the more informative result, because it rules out the
-simplest version of the "research ignores the shifting burden" narrative for
-this specialty.</p>
+expectation (2) is the more informative result, because it does not support
+the simplest version of the "research ignores the shifting burden" narrative
+for this specialty.</p>
 """
     return page("Findings", body, lang="en", rel="findings.html")
 
@@ -1434,12 +1606,17 @@ haversine 大圆距离。估计量的诊断经过，以及与被其替代的两�
 <tr><th class="l">病因</th>{''.join(f'<th>{PLAB[p]}</th>' for p in PERIODS)}<th>首 → 末变化</th></tr>
 {''.join(rows)}
 </table>
-<p>七个病因的距离全部下降（−39% 至 −80%）。三条路径——中耳炎、听力损失与喉癌——
-单调下降。其余并非如此：口腔癌的路径呈锯齿形（中间各期为 1,048 / 1,369 / 692 /
-1,292 km）；鼻咽癌在 2015–19 年降至 978 km，末期回升至 2,467 km，为本层最大单步
-反转；甲状腺癌在陡降后于最后一步小幅上升（1,674 → 1,756 km，+82 km）。方向趋同
-不等于水平趋同：末期距离仍为 1,102–5,242 km，故每个病因的研究中心仍位于与其
-负担中心不同的地图区域。</p>
+<p>七个病因中六个的距离下降（−14% 至 −80%）。三条路径——中耳炎、听力损失与喉癌——
+单调下降。其余并非如此：口腔癌的路径呈锯齿形（中间各期为 1,214 / 1,558 / 618 /
+1,187 km）；甲状腺癌在陡降后于最后一步小幅上升（1,674 → 1,756 km，+82 km）；
+其他咽癌先升后降，末期仅比首期低 14%。唯一的例外是鼻咽癌：其研究重心起步即靠近
+东亚负担中心（780 km），随后逐期远离至 1,601 km（+105%）——更正检索式之前表面
+的趋同与回升是非癌鼻咽记录的假象。方向趋同不等于水平趋同：末期距离仍为
+1,081–5,957 km，故每个病因的研究中心仍位于与其负担中心不同的地图区域。</p>
+<p><b>谁在移动？</b>把每一侧的移动分开看：30 年间，七个病因的负担重心各自总移动
+仅 300–1,088 km（五个期间步之和），而研究重心总移动 1,374–8,158 km。双重心
+距离的全部变化因此都是研究侧的移动——发文作者在哪里发表的格局在变，而不是
+负担格局在变。</p>
 
 <h3>谁在发文：LMIC 第一作者份额</h3>
 <p>14 区合并，解析所得第一作者记录中作者机构位于低收入或中等收入国家（世界银行
@@ -1450,8 +1627,8 @@ haversine 大圆距离。估计量的诊断经过，以及与被其替代的两�
 {''.join(lmic_rows)}
 </table>
 <p>三列均以全部解析记录为分母，故剔除中国列即为本站通用的冻结口径（不按非中国
-记录重新归一）。这一合并上升多由中国单独贡献（占全部解析记录的 2.5% → 21.9%），
-但剔除中国后的份额仍增至三倍以上（5.4% → 17.9%）。各病区的第一作者地域——包括
+记录重新归一）。这一合并上升多由中国单独贡献（占全部解析记录的 2.7% → 23.8%），
+但剔除中国后的份额仍增至三倍以上（5.1% → 16.8%）。各病区的第一作者地域——包括
 每个负担病因位于其 DALY 前十国家作者的份额——见各<a href="areas.html">病区页</a>。</p>
 """
         return page("地理", body, lang="zh", rel="geography.html")
@@ -1475,16 +1652,24 @@ in the frozen estimator-sensitivity table on the
 <tr><th class="l">Cause</th>{''.join(f'<th>{PLAB[p]}</th>' for p in PERIODS)}<th>Change, first → last</th></tr>
 {''.join(rows)}
 </table>
-<p>The distance fell for all seven causes (−39% to −80%). Three paths —
+<p>The distance fell for six of the seven causes (−14% to −80%). Three paths —
 otitis media, hearing loss and laryngeal cancer — fall monotonically. The
-others do not: oral cancer's path is a sawtooth (1,048 / 1,369 / 692 /
-1,292 km across the middle periods); nasopharyngeal cancer fell to 978 km
-in 2015–19 and rebounded to 2,467 km in the last period, the largest
-single-step reversal in this layer; thyroid cancer rose slightly in the
-final step (1,674 → 1,756 km, +82 km) after a steep fall. Convergence in
-direction is not convergence in level: last-period distances remain
-1,102–5,242 km, so the research centre of every cause still sits on a
+others do not: oral cancer's path is a sawtooth (1,214 / 1,558 / 618 /
+1,187 km across the middle periods); thyroid cancer rose slightly in the
+final step (1,674 → 1,756 km, +82 km) after a steep fall; other pharyngeal
+cancer rose before it fell, ending only 14% below its start. The one
+exception is nasopharyngeal cancer: its research centroid started close to
+the East-Asian burden centre (780 km) and moved away period by period to
+1,601 km (+105%) — the convergence and rebound seen before the formulation
+correction were artefacts of non-cancer nasopharyngeal records. Convergence
+in direction is not convergence in level: last-period distances remain
+1,081–5,957 km, so the research centre of every cause still sits on a
 different part of the map from its burden centre.</p>
+<p><b>Who moved?</b> Separating the two sides: over 30 years, each cause's
+burden centroid moved only 300–1,088 km in total (the sum of its five
+period steps), while its research centroid moved 1,374–8,158 km. All of
+the change in the double-centroid distance is therefore research-side
+movement — where publishing authors are, not where the burden is.</p>
 
 <h3>Who publishes: LMIC first-author share</h3>
 <p>Pooled across all 14 areas, the share of parsed first-author records
@@ -1499,8 +1684,8 @@ simplification):</p>
 <p>All three shares use all parsed records as the denominator, so the
 excluding-China column is the frozen basis reported throughout this site
 (it is not renormalised to non-China records). China alone accounts for
-much of the pooled rise (2.5% → 21.9% of all parsed records), but the
-excluding-China share still more than tripled (5.4% → 17.9%). Per-area
+much of the pooled rise (2.7% → 23.8% of all parsed records), but the
+excluding-China share still more than tripled (5.1% → 16.8%). Per-area
 first-author geography — including each burden cause's share of authors in
 its ten highest-DALY countries — is on the individual
 <a href="areas.html">area pages</a>.</p>
@@ -1549,12 +1734,13 @@ def typology_page(lang="en"):
 <tr><th class="l">病因</th><th>S</th><th>B</th><th>A</th><th class="l">主型</th><th class="l">低组（±15% / ±0.3）</th><th class="l">高组（±35% / ±0.7）</th></tr>
 {''.join(rows)}
 </table>
-<p>敏感性表现：鼻咽癌与口腔癌在三套阈值下均为技术点燃型——仅有的两个完全稳健的
-归型。中耳炎在主组与低组下为解决稀释型，在高组下为未归型。听力损失在主组与高组下
-为恒定型，在低组下为未归型；其型只描述动态，必须与其水平一并读——2020–24 年
-ABR 0.36（log2 ABR −1.47），池内最深缺口。在主阈值下未归型的三个病因中，喉癌在
-低组下成为解决稀释型，其他咽癌在低组下成为负担同行型，甲状腺癌在高组下成为恒定型。
-三者都位于规则边界附近；分类如实报告这一点，而非强行裁断。</p>
+<p>敏感性表现：口腔癌在三套阈值下均为技术点燃型，听力损失在三套阈值下均为
+恒定型，鼻咽癌在三套阈值下均为未归型。中耳炎在主组与低组下为解决稀释型，在高组下
+为未归型。听力损失的型只描述动态，必须与其水平一并读——2020–24 年
+ABR 0.43（log2 ABR −1.20），池内最深缺口。在主阈值下未归型的四个病因中，喉癌在
+低组下成为解决稀释型，其他咽癌在低组下成为负担同行型、在高组下成为恒定型，
+甲状腺癌在低组下成为技术点燃型、在高组下成为恒定型。它们都位于规则边界附近；
+分类如实报告这一点，而非强行裁断。</p>
 
 <h3>关注层：仅份额动态标签</h3>
 <p>关注层病区没有 GBD 匹配的负担病因，因此不归型——只在相同带宽下为其池内份额
@@ -1591,18 +1777,19 @@ three-signal framework; anything matching no rule is reported as
 <tr><th class="l">Cause</th><th>S</th><th>B</th><th>A</th><th class="l">Main type</th><th class="l">Low set (±15% / ±0.3)</th><th class="l">High set (±35% / ±0.7)</th></tr>
 {''.join(rows)}
 </table>
-<p>Sensitivity behaviour: nasopharyngeal and oral cancer are
-technology-ignited under all three threshold sets — the only two fully
-robust assignments. Otitis media is resolution-dilution under the main and
-low sets and unclassified under the high set. Hearing loss is constant
-under the main and high sets and unclassified under the low set; its type
-describes dynamics only and must be read together with its level — ABR
-0.36 in 2020–24 (log2 ABR −1.47), the pool's deepest deficit. Of the three
-causes unclassified under the main thresholds, laryngeal cancer becomes
-resolution-dilution under the low set, other pharyngeal cancer becomes
-burden-tracking under the low set, and thyroid cancer becomes constant
-under the high set. Each sits near a rule boundary; the classification
-reports that rather than resolving it by fiat.</p>
+<p>Sensitivity behaviour: oral cancer is technology-ignited under all three
+threshold sets, hearing loss is constant under all three, and
+nasopharyngeal cancer is unclassified under all three. Otitis media is
+resolution-dilution under the main and low sets and unclassified under the
+high set. Hearing loss's type describes dynamics only and must be read
+together with its level — ABR 0.43 in 2020–24 (log2 ABR −1.20), the pool's
+deepest deficit. Of the four causes unclassified under the main thresholds,
+laryngeal cancer becomes resolution-dilution under the low set, other
+pharyngeal cancer becomes burden-tracking under the low set and constant
+under the high set, and thyroid cancer becomes technology-ignited under
+the low set and constant under the high set. Each sits near a rule
+boundary; the classification reports that rather than resolving it by
+fiat.</p>
 
 <h3>Attention tier: share-dynamics labels only</h3>
 <p>Attention-tier areas have no GBD-matched burden cause, so they receive
@@ -1650,12 +1837,19 @@ def about_page(lang="en"):
 <p class="kv">
 <b>预注册：</b>开放科学框架（OSF）项目 42ytu；注册
 DOI <a href="{OSF_URL}">{OSF_DOI}</a>。方案在记录级生产开始之前注册；修订书
-v1.1（以 GBD 2023 替代 IHME 已退役的 GBD 2021）随注册存档。<br>
-<b>冻结存档：</b>Zenodo，DOI <a href="{ZENODO_URL}">{ZENODO_DOI}</a>——全部冻结
-表格、记录级国家解析表、GBD 输入摘录、全部生产与绘图代码及项目文件。<br>
+v1.1（以 GBD 2023 替代 IHME 已退役的 GBD 2021）与修订书 v1.2（2026 年 11 月
+21 日，检索式更正）随注册存档。<br>
+<b>冻结存档：</b>Zenodo，DOI <a href="{ZENODO_URL}">{ZENODO_DOI}</a>——原始冻结
+快照：全部原始表格、记录级国家解析表、GBD 输入摘录、全部生产与绘图代码及项目
+文件。更正后的表格在本页下载区与 OSF 项目的冻结存档文件夹中。<br>
 <b>本站规范网址：</b><a href="{CANONICAL}/">{CANONICAL}</a><br>
-<b>冻结于：</b>2026 年 11 月 12 日。本站为由冻结结果文件生成的静态网站；不随
-新数据出现而更新。</p>
+<b>冻结于：</b>2026 年 11 月 12 日；更正口径冻结于 2026 年 11 月 21 日
+（修订书 v1.2）。本站为由冻结结果文件生成的静态网站；不随新数据出现而更新。</p>
+<div class="caveat"><b>更正说明（2026 年 11 月 21 日）。</b>投稿前审核发现，
+最初冻结的两条检索式（鼻咽、其他咽）只用解剖学术语、未带癌症限定词，被非癌
+文献污染（鼻咽癌 2020–2021 年抽样 PPV 0.333）。本站全部数值现均采用修订书
+v1.2 更正后的癌症限定检索式；原始检索式保留在存档中作为敏感性基线。详见
+<a href="methods.html">方法页</a>的更正说明。</div>
 
 <h3>作者</h3>
 <p>Peiliang Lei（通讯作者）、Wenrong Dong、Jingyi Tan、Xiaoying Yang<br>
@@ -1704,13 +1898,26 @@ layers above).</p>
 DOI <a href="{OSF_URL}">{OSF_DOI}</a>. The protocol was registered before
 record-level production began; Amendment v1.1, substituting GBD 2023 for
 the GBD 2021 release that the Institute for Health Metrics and Evaluation
-had retired, is filed with the registration.<br>
+had retired, and Amendment v1.2 (21 November 2026, search-formulation
+correction) are filed with the registration.<br>
 <b>Frozen archive:</b> Zenodo, DOI <a href="{ZENODO_URL}">{ZENODO_DOI}</a> —
-all frozen tables, the record-level country-parse table, the GBD input
-extracts, all production and figure code, and the project documents.<br>
+the original frozen snapshot: all original tables, the record-level
+country-parse table, the GBD input extracts, all production and figure
+code, and the project documents. The corrected tables are on this site's
+Downloads page and in the OSF project's frozen-archive folder.<br>
 <b>Canonical site:</b> <a href="{CANONICAL}/">{CANONICAL}</a><br>
-<b>Frozen as of:</b> 12 November 2026. This is a static site generated from
-the frozen result files; it is not updated as new data appear.</p>
+<b>Frozen as of:</b> 12 November 2026; corrected basis frozen 21 November
+2026 (Amendment v1.2). This is a static site generated from the frozen
+result files; it is not updated as new data appear.</p>
+<div class="caveat"><b>Correction note (21 November 2026).</b> A
+pre-submission audit found that two of the originally frozen search
+formulations (nasopharyngeal and other pharyngeal cancer) used anatomy
+terms alone, without a cancer limiter, and were contaminated by non-cancer
+records (sampled PPV 0.333 for nasopharyngeal cancer in 2020–2021). Every
+value on this site now uses the corrected, cancer-limited formulations of
+Amendment v1.2; the original formulations are retained in the archive as a
+sensitivity basis. See the correction note on the
+<a href="methods.html">Methods page</a>.</div>
 
 <h3>Authors</h3>
 <p>Peiliang Lei (corresponding author), Wenrong Dong, Jingyi Tan,
@@ -1750,30 +1957,35 @@ research any disease should receive.</p>
 
 
 # ---------------------------------------------------------------- downloads
+PD = "site_build/precise_data"
 DOWNLOAD_FILES = [
-    ("data_l1/l1_counts_by_year.csv", "L1 publication counts by year (primary queries)"),
-    ("data_l1/l1_counts_backup_by_year.csv", "L1 publication counts by year (backup queries)"),
-    ("data_l1/terminology_sensitivity.csv", "Terminology sensitivity: primary vs backup directions"),
-    ("data_l2/abr/abr_primary.csv", "ABR primary calibre (DALY shares), 42 cells"),
-    ("data_l2/abr/abr_prevalence_sensitivity.csv", "ABR prevalence-calibre sensitivity, 42 cells"),
-    ("data_l2/abr/abr_sensitivity_pub2020_2023.csv", "ABR publication-window sensitivity (2020–23), 42 cells"),
-    ("data_l2/abr/abr_lag_sensitivity.csv", "ABR lag-window sensitivity (0/5/10 years)"),
-    ("data_l3/geo/centroid/double_centroid.csv", "Double-centroid distances and centroids (primary estimator), 42 cells"),
-    ("data_l3/geo/centroid/research_centroids_all14.csv", "Research centroids, all 14 areas"),
-    ("data_l3/geo/centroid/author_shares.csv", "First-author LMIC and top-10-burden-country shares"),
-    ("data_l3/geo/centroid/estimator_sensitivity.csv", "Centroid estimator sensitivity (3 estimators × 42 cells)"),
-    ("data_l3/geo/centroid/lmic_series_recomputed.csv", "Pooled LMIC first-author share series (incl. excl.-China)"),
-    ("data_l3/geo/country_counts.csv", "Parsed first-author records by area × period × country"),
-    ("data_l3/geo/parse_coverage.csv", "Country-parsing coverage by area × period"),
-    ("data_l4/signals.csv", "L4 typology signals (S, B, A) for all 14 areas"),
-    ("data_l4/typology.csv", "L4 typology assignments under three threshold sets"),
+    (f"{PD}/l1_counts_by_year.csv", "L1 publication counts by year (corrected primary formulations, Amendment v1.2)"),
+    ("data_l1/l1_counts_backup_by_year.csv", "L1 publication counts by year (backup formulations)"),
+    (f"{PD}/queries_precise_frozen.md", "The corrected search formulations, frozen 2026-11-21"),
+    (f"{PD}/mapping_table.csv", "Area mapping table: GBD cause, search concepts, calibre differences"),
+    (f"{PD}/terminology_sensitivity.csv", "Terminology sensitivity: corrected primary vs backup directions"),
+    (f"{PD}/abr_primary.csv", "ABR primary calibre (DALY shares), 42 cells"),
+    (f"{PD}/abr_prevalence_sensitivity.csv", "ABR prevalence-calibre sensitivity, 42 cells"),
+    (f"{PD}/abr_sensitivity_pub2020_2023.csv", "ABR publication-window sensitivity (2020–23), 42 cells"),
+    (f"{PD}/abr_lag_sensitivity.csv", "ABR lag-window sensitivity (0/5/10 years)"),
+    (f"{PD}/double_centroid.csv", "Double-centroid distances and centroids (primary estimator), 42 cells"),
+    (f"{PD}/research_centroids_all14.csv", "Research centroids, all 14 areas"),
+    (f"{PD}/author_shares.csv", "First-author LMIC and top-10-burden-country shares"),
+    (f"{PD}/estimator_sensitivity.csv", "Centroid estimator sensitivity (3 estimators; the three burden causes not re-retrieved)"),
+    (f"{PD}/lmic_series_recomputed.csv", "Pooled LMIC first-author share series (incl. excl.-China)"),
+    (f"{PD}/country_counts.csv", "Parsed first-author records by area × period × country"),
+    (f"{PD}/parse_coverage.csv", "Country-parsing coverage by area × period"),
+    (f"{PD}/signals.csv", "L4 typology signals (S, B, A) for all 14 areas"),
+    (f"{PD}/typology.csv", "L4 typology assignments under three threshold sets"),
 ]
 
 
 DOWNLOAD_DESC_ZH = [
-    "L1 按年发文计数（主检索式）",
+    "L1 按年发文计数（更正后的主检索式，修订书 v1.2）",
     "L1 按年发文计数（备用检索式）",
-    "术语敏感性：主式与备用式方向",
+    "更正后的检索式（2026 年 11 月 21 日冻结）",
+    "病区映射表：GBD 病因、检索概念与口径差异",
+    "术语敏感性：更正主式与备用式方向",
     "ABR 主口径（DALY 份额），42 个单元",
     "ABR 患病口径敏感性，42 个单元",
     "ABR 发文窗敏感性（2020–23），42 个单元",
@@ -1781,7 +1993,7 @@ DOWNLOAD_DESC_ZH = [
     "双重心距离与重心（主估计量），42 个单元",
     "全部 14 区的研究重心",
     "第一作者 LMIC 与负担前 10 国家份额",
-    "重心估计量敏感性（3 种估计量 × 42 个单元）",
+    "重心估计量敏感性（3 种估计量；未重新拉取的三个负担病因）",
     "合并 LMIC 第一作者份额序列（含剔除中国）",
     "按病区 × 时期 × 国家解析的第一作者记录数",
     "按病区 × 时期的国家解析覆盖率",
@@ -1804,20 +2016,25 @@ def downloads_page(lang="en"):
         body = f"""
 <h2>下载</h2>
 <p>本站每个数字背后的冻结结果表，可逐个下载 CSV 文件，或打包为一个存档：
-<a href="{file_pre}downloads/frozen_tables.zip"><b>frozen_tables.zip</b></a>。</p>
+<a href="{file_pre}downloads/frozen_tables.zip"><b>frozen_tables.zip</b></a>。
+除备用检索式计数外，下表全部为修订书 v1.2 更正口径（2026 年 11 月 21 日冻结）。</p>
 <table>
 <tr><th class="l">文件</th><th class="l">内容</th><th>字节</th></tr>
 {''.join(rows)}
 </table>
 <h3>完整存档与代码</h3>
 <ul>
-<li><b>Zenodo 存档</b>——完整冻结快照（上表全部表格，加上 392,456 条记录的记录级
-国家解析表、GBD 输入摘录、参考表、全部生产与绘图代码及项目文件）：
+<li><b>Zenodo 存档</b>——原始冻结快照（原始口径的全部表格，加上 392,456 条记录的
+记录级国家解析表、GBD 输入摘录、参考表、全部生产与绘图代码及项目文件）。原始
+检索式的结果保留于此，作为更正口径的敏感性基线：
 <a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a>。</li>
+<li><b>更正口径存档</b>——修订书 v1.2 与更正轮的证据文件（精确检索式、映射表、
+PPV 审核、头条存废表等）在 OSF 项目的冻结存档文件夹中：
+<a href="{OSF_URL}">doi.org/{OSF_DOI}</a>。</li>
 <li><b>生产代码</b>——检索式、GBD 映射、解析与指标代码、绘图脚本及本站生成器，
 与冻结数据一并存于上述 Zenodo 记录：
 <a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a>。</li>
-<li><b>预注册</b>——方案与修订书 v1.1（GBD 2023）：
+<li><b>预注册</b>——方案与修订书 v1.1（GBD 2023）、v1.2（检索式更正）：
 <a href="{OSF_URL}">doi.org/{OSF_DOI}</a>。</li>
 </ul>
 <p class="small">记录级 Europe PMC 元数据仍可从 Europe PMC 获取；GBD 2023 估计仍可
@@ -1828,22 +2045,31 @@ def downloads_page(lang="en"):
 <h2>Downloads</h2>
 <p>The frozen result tables behind every number on this site, as individual CSV
 files, or as one archive:
-<a href="downloads/frozen_tables.zip"><b>frozen_tables.zip</b></a>.</p>
+<a href="downloads/frozen_tables.zip"><b>frozen_tables.zip</b></a>. Except for
+the backup-formulation counts, all tables are on the corrected basis of
+Amendment v1.2 (frozen 2026-11-21).</p>
 <table>
 <tr><th class="l">File</th><th class="l">Contents</th><th>Bytes</th></tr>
 {''.join(rows)}
 </table>
 <h3>Full archive and code</h3>
 <ul>
-<li><b>Zenodo archive</b> — the complete frozen snapshot (all tables above plus
-the record-level country-parse table for 392,456 records, the GBD input
-extracts, reference tables, all production and figure code, and the project
-documents): <a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a>.</li>
+<li><b>Zenodo archive</b> — the original frozen snapshot (all tables on the
+original basis, plus the record-level country-parse table for 392,456
+records, the GBD input extracts, reference tables, all production and figure
+code, and the project documents). The original formulations' results are
+retained there as the sensitivity basis for the corrected basis:
+<a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a>.</li>
+<li><b>Corrected-basis archive</b> — Amendment v1.2 and the fix round's
+evidence files (precise formulations, mapping table, PPV audit, headline
+survival table) are in the OSF project's frozen-archive folder:
+<a href="{OSF_URL}">doi.org/{OSF_DOI}</a>.</li>
 <li><b>Production code</b> — search formulations, GBD mapping, parsing and
 indicator code, figure scripts and this site's generator are archived together
 with the frozen data in the Zenodo record above:
 <a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a>.</li>
-<li><b>Preregistration</b> — protocol and Amendment v1.1 (GBD 2023):
+<li><b>Preregistration</b> — protocol and Amendments v1.1 (GBD 2023) and
+v1.2 (formulation correction):
 <a href="{OSF_URL}">doi.org/{OSF_DOI}</a>.</li>
 </ul>
 <p class="small">Record-level Europe PMC metadata remain available from Europe PMC;
@@ -1913,14 +2139,15 @@ def build():
           'crs_polyps.html">Chronic rhinosinusitis / nasal polyps (CRS) *</a>'
           in pages["index.html"])
     check("CRS caveat note under home grid",
-          "the share decline reverses (+251.0%)" in pages["index.html"])
+          "reported under three formulations" in pages["index.html"]
+          and "no share direction is carried as a headline" in pages["index.html"])
     check("typology page mutes unclassified rows",
-          pages["typology.html"].count('class="mute"') == 3)
+          pages["typology.html"].count('class="mute"') == 4)
     check("typology page carries CRS caveat",
-          "terminology migration" in pages["typology.html"])
-    check("findings page pairs hearing constant with ABR 0.36",
+          "three different literatures" in pages["typology.html"])
+    check("findings page pairs hearing constant with ABR 0.43",
           "constant</b> on dynamics only" in pages["findings.html"]
-          and "ABR 0.36 in 2020–24" in pages["findings.html"])
+          and "ABR 0.43 in 2020–24" in pages["findings.html"])
     check("findings scorecard verdicts present",
           all(v in pages["findings.html"] for v in
               ("Fully matched", "Largely not supported", "Half matched")))
@@ -1950,18 +2177,18 @@ def build():
           'crs_polyps.html">慢性鼻窦炎/鼻息肉（CRS） *</a>'
           in pages_zh["index.html"])
     check("CRS caveat note under zh home grid",
-          "份额下降" in pages_zh["index.html"]
+          "三种检索式" in pages_zh["index.html"]
           and "+251.0%" in pages_zh["index.html"]
-          and "术语迁移" in pages_zh["index.html"])
+          and "不作为头条结论" in pages_zh["index.html"])
     check("zh typology page mutes unclassified rows",
-          pages_zh["typology.html"].count('class="mute"') == 3)
+          pages_zh["typology.html"].count('class="mute"') == 4)
     check("zh typology page labels unclassified 未归型",
           "未归型" in pages_zh["typology.html"])
     check("zh typology page carries CRS caveat",
-          "术语迁移" in pages_zh["typology.html"])
-    check("zh findings pairs hearing 恒定型 with ABR 0.36",
+          "不作为头条结论" in pages_zh["typology.html"])
+    check("zh findings pairs hearing 恒定型 with ABR 0.43",
           "恒定型</b>" in pages_zh["findings.html"]
-          and "ABR 0.36" in pages_zh["findings.html"])
+          and "ABR 0.43" in pages_zh["findings.html"])
     check("zh findings scorecard verdicts present",
           all(v in pages_zh["findings.html"] for v in
               ("完全符合", "大体不成立", "一半符合")))
@@ -1986,12 +2213,12 @@ def build():
           and "负担重心" in pages_zh["geography.html"]
           and "研究重心" in pages_zh["geography.html"])
     check("CRS caveat on zh areas overview",
-          "术语迁移" in pages_zh["areas.html"])
+          "不作为头条结论" in pages_zh["areas.html"])
     check("CRS caveat on zh CRS area page",
-          "术语迁移" in pages_zh["areas/crs_polyps.html"])
-    check("zh hearing page pairs 恒定型 with ABR 0.36",
+          "不作为头条结论" in pages_zh["areas/crs_polyps.html"])
+    check("zh hearing page pairs 恒定型 with ABR 0.43",
           "恒定型" in pages_zh["areas/hearing_loss.html"]
-          and "ABR 0.36" in pages_zh["areas/hearing_loss.html"])
+          and "ABR 0.43" in pages_zh["areas/hearing_loss.html"])
     for a in AREAS:
         html = pages_zh[f"areas/{a}.html"]
         check(f"zh breadcrumb on {a}",
@@ -2017,13 +2244,13 @@ def build():
         check(f"numeric tokens identical en/zh on {rel}",
               _nums(pages[rel]) == _nums(pages_zh[rel]))
     for rel, needles in (
-            ("index.html", ["26,544", "128,117", "32.1%", "44.6%", "0.36",
-                            "39.8%", "392,456", "+251.0%"]),
-            ("findings.html", ["8.3%", "13.4%", "−1.47", "9.45", "978",
-                               "2,467", "39.8%", "17.9%"]),
-            ("methods.html", ["392,458", "4,806", "11,603", "92.76%",
-                              "6,371.0088", "82.0", "+251.0%"]),
-            ("about.html", ["42", "2026"])):
+            ("index.html", ["24,251", "112,267", "30.7%", "38.5%", "0.43",
+                            "40.6%", "357,711", "+251.0%"]),
+            ("findings.html", ["5.1%", "10.3%", "−1.20", "11.37", "780",
+                               "1,601", "40.6%", "16.8%"]),
+            ("methods.html", ["357,712", "11,603", "92.8%",
+                              "6,371.0088", "82.0", "+251.0%", "0.333"]),
+            ("about.html", ["42", "2026", "0.333"])):
         for n in needles:
             check(f"zh {rel} carries number {n}", n in pages_zh[rel])
     for rel, html in pages.items():

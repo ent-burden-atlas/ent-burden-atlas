@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home · ENT Burden Atlas</title>
-<link rel="stylesheet" href="assets/style.css?v=3">
+<link rel="stylesheet" href="assets/style.css?v=4">
 </head>
 <body>
 <header class="site"><div class="wrap">
@@ -20,69 +20,78 @@
 <p>The ENT Burden Atlas presents a preregistered census of how research attention in
 otolaryngology (ear, nose and throat medicine) has aligned with disease burden over
 30 years. Publications were counted in Europe PMC for 14 disease areas
-(1995–2024; 392,456 retrievable records); for the seven areas with a
+(1995–2024; 357,711 area-assigned records, corresponding to
+329,250 unique publications); for the seven areas with a
 matched Global Burden of Disease (GBD) 2023 cause, output is set against DALY
 burden (1995–2023). Four measurement layers are reported on one scale:
 publication-share dynamics, the attention–burden ratio (ABR), the geographic
 distance between burden and research centroids, and a rule-based decoupling
-typology. The design was registered before the record-level data were pulled
+typology. All values on this site use the corrected search formulations of
+Amendment v1.2 (21 November 2026); see the correction note on the
+<a href="methods.html">Methods page</a>. The design was registered before the record-level data were pulled
 (<a href="https://doi.org/10.17605/OSF.IO/NUC4B">OSF registration, DOI 10.17605/OSF.IO/NUC4B</a>).</p>
 
 <div class="cards">
-<div class="card"><div class="big">26,544 → 128,117</div>
+<div class="card"><div class="big">24,251 → 112,267</div>
 <div class="lab">Publications in the 14-area pool per five-year period, 1995–99 → 2020–24</div></div>
-<div class="card"><div class="big">32.1% → 44.6%</div>
+<div class="card"><div class="big">30.7% → 38.5%</div>
 <div class="lab">Combined pool share of the five head-and-neck cancers</div></div>
-<div class="card"><div class="big">log2 ABR −1.05 → −1.47</div>
-<div class="lab">Hearing loss: 72.7% of pooled DALYs vs 26.3% of pooled publications
-(ABR 0.36 in 2020–24) — the deepest, still-widening deficit</div></div>
-<div class="card"><div class="big">7.9% → 39.8%</div>
+<div class="card"><div class="big">log2 ABR −0.95 → −1.20</div>
+<div class="lab">Hearing loss: 72.7% of pooled DALYs vs 31.6% of pooled publications
+(ABR 0.43 in 2020–24) — the deepest, still-widening deficit</div></div>
+<div class="card"><div class="big">7.8% → 40.6%</div>
 <div class="lab">Low- and middle-income country share of first authors (all pooled areas);
-excluding China 5.4% → 17.9%</div></div>
+excluding China 5.1% → 16.8%</div></div>
 </div>
 
 <h3>Explore the 14 areas</h3>
 <div class="acards">
-<div class="acard"><div class="nm"><a href="areas/otitis_media.html">Otitis media</a></div><div class="hl">ABR 1.27 in 2020–24 · Pool share 8.4% → 2.9%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/hearing_loss.html">Hearing loss</a></div><div class="hl">ABR 0.36 in 2020–24 · Pool share 20.4% → 16.9%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/larynx_cancer.html">Laryngeal cancer</a></div><div class="hl">ABR 0.44 in 2020–24 · Pool share 3.2% → 1.4%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/oral_cancer.html">Lip and oral cavity cancer</a></div><div class="hl">ABR 1.57 in 2020–24 · Pool share 4.5% → 8.9%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/nasopharynx_cancer.html">Nasopharyngeal cancer</a></div><div class="hl">ABR 5.94 in 2020–24 · Pool share 8.3% → 13.4%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/other_pharynx_cancer.html">Other pharyngeal cancer</a></div><div class="hl">ABR 2.82 in 2020–24 · Pool share 6.0% → 8.2%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/thyroid_cancer.html">Thyroid cancer</a></div><div class="hl">ABR 9.45 in 2020–24 · Pool share 10.1% → 12.7%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/crs_polyps.html">Chronic rhinosinusitis / nasal polyps (CRS) *</a></div><div class="hl">Pool share 8.5% → 6.3% · Share falling</div><div class="tier"><span class="tag">Attention tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/allergic_rhinitis.html">Allergic rhinitis</a></div><div class="hl">Pool share 6.1% → 4.6% · Share falling</div><div class="tier"><span class="tag">Attention tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/osa.html">Obstructive sleep apnoea</a></div><div class="hl">Pool share 9.9% → 12.5% · Share rising</div><div class="tier"><span class="tag">Attention tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/tinnitus.html">Tinnitus</a></div><div class="hl">Pool share 3.5% → 3.5% · Share stable</div><div class="tier"><span class="tag">Attention tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/vertigo.html">Vertigo</a></div><div class="hl">Pool share 4.6% → 3.5% · Share stable</div><div class="tier"><span class="tag">Attention tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/cholesteatoma.html">Cholesteatoma</a></div><div class="hl">Pool share 2.0% → 0.9% · Share falling</div><div class="tier"><span class="tag">Attention tier</span></div></div>
-<div class="acard"><div class="nm"><a href="areas/cochlear_implant.html">Cochlear implants</a></div><div class="hl">Pool share 4.5% → 4.4% · Share stable</div><div class="tier"><span class="tag">Attention tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/otitis_media.html">Otitis media</a></div><div class="hl">ABR 1.53 in 2020–24 · Pool share 9.2% → 3.3%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/hearing_loss.html">Hearing loss</a></div><div class="hl">ABR 0.43 in 2020–24 · Pool share 22.3% → 19.3%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/larynx_cancer.html">Laryngeal cancer</a></div><div class="hl">ABR 0.63 in 2020–24 · Pool share 4.7% → 1.9%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/oral_cancer.html">Lip and oral cavity cancer</a></div><div class="hl">ABR 1.91 in 2020–24 · Pool share 5.1% → 10.3%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/nasopharynx_cancer.html">Nasopharyngeal cancer</a></div><div class="hl">ABR 2.98 in 2020–24 · Pool share 5.8% → 6.4%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/other_pharynx_cancer.html">Other pharyngeal cancer</a></div><div class="hl">ABR 1.99 in 2020–24 · Pool share 4.1% → 5.5%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/thyroid_cancer.html">Thyroid cancer</a></div><div class="hl">ABR 11.37 in 2020–24 · Pool share 11.0% → 14.5%</div><div class="tier"><span class="tag">Burden tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/crs_polyps.html">Chronic rhinosinusitis / nasal polyps (CRS) *</a></div><div class="hl">Pool share 4.3% → 5.4% · Share rising</div><div class="tier"><span class="tag">Attention tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/allergic_rhinitis.html">Allergic rhinitis</a></div><div class="hl">Pool share 6.7% → 5.2% · Share stable</div><div class="tier"><span class="tag">Attention tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/osa.html">Obstructive sleep apnoea</a></div><div class="hl">Pool share 10.8% → 14.2% · Share rising</div><div class="tier"><span class="tag">Attention tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/tinnitus.html">Tinnitus</a></div><div class="hl">Pool share 3.8% → 4.0% · Share stable</div><div class="tier"><span class="tag">Attention tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/vertigo.html">Vertigo</a></div><div class="hl">Pool share 5.1% → 4.0% · Share stable</div><div class="tier"><span class="tag">Attention tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/cholesteatoma.html">Cholesteatoma</a></div><div class="hl">Pool share 2.2% → 1.1% · Share falling</div><div class="tier"><span class="tag">Attention tier</span></div></div>
+<div class="acard"><div class="nm"><a href="areas/cochlear_implant.html">Cochlear implants</a></div><div class="hl">Pool share 4.9% → 5.0% · Share stable</div><div class="tier"><span class="tag">Attention tier</span></div></div>
 </div>
-<p class="small">* CRS/polyps: the share decline reverses (+251.0%) under a backup
-query built only from modern post-consensus terminology and is read as terminology
-migration, not as a fall in research volume (see the
+<p class="small">* CRS/polyps: this area is reported under three formulations —
+its share rose (+26.3%) under the corrected primary formulation, fell (−26.6%)
+under the original formulation, and rose +251.0% under a backup formulation
+built only from modern post-consensus terminology. The three count three
+different literatures, so no share direction is carried as a headline (see the
 <a href="areas/crs_polyps.html">CRS area page</a> and <a href="methods.html">Methods</a>).</p>
 
 <h3>Headline findings</h3>
 <ul>
 <li><b>Shares rotated towards oncology.</b> The five head-and-neck cancers jointly rose
-from 32.1% to 44.6% of the pool; laryngeal cancer moved against its
-own group (3.2% → 1.4%).</li>
-<li><b>Otitis media shrank in share, not in output.</b> Its share fell from 8.4% to 2.9%
+from 30.7% to 38.5% of the pool, driven by oral cancer
+(5.1% → 10.3%) and thyroid cancer (11.0% → 14.5%); nasopharyngeal cancer was
+nearly flat (5.8% → 6.4%), and laryngeal cancer moved against its own group
+(4.7% → 1.9%).</li>
+<li><b>Otitis media shrank in share, not in output.</b> Its share fell from 9.2% to 3.3%
 while its five-year output grew from 2,229 to 3,706 papers — a denominator effect.</li>
 <li><b>Hearing loss is the central level finding.</b> It carries 72.7% of the
-seven-cause DALY pool against 26.3% of the same pool's publications, and the
-gap widened over 30 years (log2 ABR −1.05 → −1.47).</li>
-<li><b>Geography converged in direction, not in level.</b> The burden–research centroid
-distance fell for all seven burden-tier causes (−39% to −80%), yet last-period
-distances remain 1,102–5,242 km.</li>
+seven-cause DALY pool against 31.6% of the same pool's publications, and the
+gap widened over 30 years (log2 ABR −0.95 → −1.20).</li>
+<li><b>Geography converged in direction for most causes, not in level.</b> The
+burden–research centroid distance fell for six of the seven burden-tier causes
+(−14% to −80%); nasopharyngeal cancer moved away, from a close start
+(780 → 1,601 km, +105%). Last-period distances remain 1,081–5,957 km.</li>
 <li><b>Typology:</b> otitis media is resolution-dilution (a relative share dilution —
-absolute DALYs rose for all seven causes); nasopharyngeal and oral cancer are
-technology-ignited under all three threshold sets; hearing loss is constant in
-dynamics at a deeply negative level (ABR 0.36); laryngeal, other pharyngeal and
-thyroid cancer are reported as <i>unclassified</i>, not forced into a type.</li>
+absolute DALYs rose for all seven causes); oral cancer is technology-ignited
+under all three threshold sets; hearing loss is constant in dynamics (under all
+three sets) at a deeply negative level (ABR 0.43); nasopharyngeal, laryngeal,
+other pharyngeal and thyroid cancer are reported as <i>unclassified</i>, not
+forced into a type.</li>
 </ul>
-<div class="caveat"><b>CRS/polyps.</b> Terminology caveat: under a pre-frozen backup query built only from modern post-consensus terms, the CRS share change reverses (+251.0% instead of −26.6%). The apparent decline is read as terminology migration, not as a change in research volume, and is not carried as a headline conclusion.</div>
+<div class="caveat"><b>CRS/polyps.</b> Formulation note: this area is reported under three formulations, which count three different literatures. Under the corrected primary formulation its pool share rose (+26.3%); under the original formulation it fell (−26.6%); under a pre-frozen backup formulation built only from modern post-consensus terms it rose +251.0%. No share-direction claim for this area is carried as a headline conclusion.</div>
 
 <h3>How to cite and reuse</h3>
 <p class="kv">Preregistration: <a href="https://doi.org/10.17605/OSF.IO/NUC4B">doi.org/10.17605/OSF.IO/NUC4B</a> ·

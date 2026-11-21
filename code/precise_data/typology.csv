@@ -1,0 +1,15 @@
+area,tier,type_main,type_low,type_high,robust_across_thresholds
+allergic_rhinitis,attention,share_stable,share_falling,share_stable,0
+cholesteatoma,attention,share_falling,share_falling,share_falling,1
+cochlear_implant,attention,share_stable,share_stable,share_stable,1
+crs_polyps,attention,share_rising,share_rising,share_stable,0
+hearing_loss,burden,constant,constant,constant,1
+larynx_cancer,burden,unclassified,resolution_dilution,unclassified,0
+nasopharynx_cancer,burden,unclassified,unclassified,unclassified,1
+oral_cancer,burden,technology_ignited,technology_ignited,technology_ignited,1
+osa,attention,share_rising,share_rising,share_stable,0
+other_pharynx_cancer,burden,unclassified,burden_tracking,constant,0
+otitis_media,burden,resolution_dilution,resolution_dilution,unclassified,0
+thyroid_cancer,burden,unclassified,technology_ignited,constant,0
+tinnitus,attention,share_stable,share_stable,share_stable,1
+vertigo,attention,share_stable,share_falling,share_stable,0
