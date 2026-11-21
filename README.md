@@ -14,7 +14,7 @@ first-author shares, and a rule-based decoupling typology.
   https://ent-burden-atlas.github.io/ent-burden-atlas/)
 - **Preregistration:** OSF, DOI [10.17605/OSF.IO/NUC4B](https://doi.org/10.17605/OSF.IO/NUC4B)
 - **Frozen data & code archive:** Zenodo, DOI
-  [10.5281/zenodo.24157110](https://doi.org/10.5281/zenodo.24157110)
+  [10.5281/zenodo.24418492](https://doi.org/10.5281/zenodo.24157110)
   (includes the record-level country-parse table for all 392,456 records, the
   GBD input extracts, reference tables and the protocol documents)
 - **Manuscript:** in preparation (not yet published).
