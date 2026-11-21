@@ -580,7 +580,7 @@ def home(lang="en"):
 <p class="kv">预注册：<a href="{OSF_URL}">doi.org/{OSF_DOI}</a> ·
 冻结数据与代码：<a href="{ZENODO_URL}">Zenodo，DOI {ZENODO_DOI}</a> ·
 本站规范网址：<a href="{CANONICAL}/">burden.erbihou.org</a></p>
-<p>报告本普查的稿件正在为 <i>Scientometrics</i> 准备中（尚未发表）。
+<p>报告本普查的稿件正在准备中（尚未发表）。
 <a href="downloads.html">下载页</a>的冻结表格可按存档许可再利用；本管线在结构上与专科
 无关，可换一个专科的疾病池重跑。</p>
 <p class="small">范围边界：本站每一数量描述的都是已发表研究相对于模型化负担估计的
@@ -647,7 +647,7 @@ thyroid cancer are reported as <i>unclassified</i>, not forced into a type.</li>
 <p class="kv">Preregistration: <a href="{OSF_URL}">doi.org/{OSF_DOI}</a> ·
 Frozen data and code: <a href="{ZENODO_URL}">Zenodo, DOI {ZENODO_DOI}</a> ·
 Canonical site: <a href="{CANONICAL}/">burden.erbihou.org</a></p>
-<p>A manuscript reporting this census is in preparation for <i>Scientometrics</i>
+<p>A manuscript reporting this census is in preparation
 (it has not been published). The frozen tables on the
 <a href="downloads.html">Downloads page</a> can be reused under the archive licence;
 the pipeline is specialty-agnostic and can be re-run for another specialty's
@@ -1676,7 +1676,7 @@ Department of Otolaryngology, The Third Hospital of Shijiazhuang, Shijiazhuang, 
 Lei P, Dong W, Tan J, Yang X. <i>Research attention and disease burden in
 otolaryngology, 1995–2024: a preregistered dynamic census of publication
 shares, attention–burden ratios and research geography.</i> Manuscript in
-preparation for <i>Scientometrics</i>.<br>
+preparation.<br>
 预注册：<a href="{OSF_URL}">doi.org/{OSF_DOI}</a> ·
 冻结数据与代码：<a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a> ·
 图谱站：<a href="{CANONICAL}/">burden.erbihou.org</a>
@@ -1736,7 +1736,7 @@ dataset.</li>
 Lei P, Dong W, Tan J, Yang X. <i>Research attention and disease burden in
 otolaryngology, 1995–2024: a preregistered dynamic census of publication
 shares, attention–burden ratios and research geography.</i> Manuscript in
-preparation for <i>Scientometrics</i>.<br>
+preparation.<br>
 Preregistration: <a href="{OSF_URL}">doi.org/{OSF_DOI}</a> ·
 Frozen data and code: <a href="{ZENODO_URL}">doi.org/{ZENODO_DOI}</a> ·
 Atlas: <a href="{CANONICAL}/">burden.erbihou.org</a>

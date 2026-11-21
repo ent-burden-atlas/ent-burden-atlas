@@ -113,7 +113,7 @@ def main():
 This archive is the frozen snapshot behind the ENT Burden Atlas
 (burden.erbihou.org) and the manuscript "Research attention and disease
 burden in otolaryngology, 1995–2024: a preregistered dynamic census"
-(in preparation for Scientometrics).
+(in preparation).
 
 Contents: frozen derived tables for the four analysis layers (publication
 shares, attention–burden ratios, geographic double-centroid distances and
